@@ -1,0 +1,10 @@
+Package: rcolony
+Type: Package
+Title: Tools for implementation and visualisation of Colony2 and its outputs.
+Version: 1.3
+Date: 2013-01-21
+Author: Owen R. Jones
+Maintainer: Owen R. Jones <jones@demogr.mpg.de>
+Description: The RColony package provides tools for the implementation of the Colony pedigree analysis software. In addition it provides tools for visualising, and summarising the results of the Colony analyses. 
+License: GPL
+LazyLoad: yes
