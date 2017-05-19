@@ -1,5 +1,45 @@
 ##' A function to run Colony2 from within the R environment.
 ##'
+##' This function used \code{system2} to call Colony2 from within R.
+##' @param colonyexecpath The path to the Colony2 executable. If none is given, and the function defaults to \"prompt\", then you will be prompted to click on the file.
+##' @param datfilepath The path to the DAT file that you wish to run. If none is given, and the function defaults to \"prompt\", then you will be prompted to click on the file.
+##' @param wait Should R wait for Colony2 to be run by the system or not? TRUE/FALSE
+##' @return return value (0 if success)
+##' @author Timothee Flutre
+##' @references Wang, J. (2004) Sibship reconstruction from genetic data with typing errors.  Genetics 166: 1963-1979.
+##' @author Owen R. Jones
+##' @seealso \code{\link{monitor.colony}}
+##' @keywords IO
+##' @export
+run.colony <- function(colonyexecpath="prompt", datfilepath="prompt",
+                        wait=TRUE){
+  if(colonyexecpath=="prompt"){
+    cat("Please click to select your Colony2 executable (probably called Colony2.exe or Colony2).\n\n")
+    utils::flush.console()
+    colonyexecpath<-file.choose()
+  }
+  stopifnot(file.exists(colonyexecpath))
+
+  if(datfilepath=="prompt"){
+    cat("Please click to select your DAT file.\n\n")
+    utils::flush.console()
+    datfilepath<-file.choose()
+  }
+  stopifnot(file.exists(datfilepath))
+
+  cmd <- paste0(colonyexecpath, " IFN:", datfilepath)
+  if(Sys.info()["sysname"] == "Windows"){
+    ret <- system2(command=colonyexecpath, args=paste0("IFN:", datfilepath),
+                   wait=wait, invisible=FALSE)
+  } else
+    ret <- system2(command=colonyexecpath, args=paste0("IFN:", datfilepath),
+                   wait=wait)
+
+  return(invisible(ret))
+}
+
+##' A function to run Colony2 from within the R environment.
+##'
 ##' This function used \code{system} to call Colony2 from within R.
 ##'
 ##' If you wish to monitor the progress of the Colony2 analysis you must set monitor=TRUE, and wait=FALSE. The system will then redirect output from the Colony2 program to a temporary file (temp.txt).
@@ -15,7 +55,7 @@
 ##' @seealso \code{\link{monitor.colony}}
 ##' @keywords IO
 ##' @export
-run.colony<-function(colonyexecpath="prompt",datfilepath="prompt",wait=FALSE,monitor=TRUE){
+run.colony.deprecated<-function(colonyexecpath="prompt",datfilepath="prompt",wait=FALSE,monitor=TRUE){
 	 #don't forget the trailing slash!
 
 if(colonyexecpath=="prompt"){
