@@ -2,7 +2,6 @@
 \alias{rcolony-package}
 \alias{rcolony}
 
-\alias{}
 \docType{package}
 \title{
 Tools for implementation and visualisation of Colony and its outputs.
@@ -30,5 +29,3 @@ Wang, J. (2004) Sibship reconstruction from genetic data with typing errors. Gen
 }
 
 \keyword{package}
-\seealso{}
-\examples{}

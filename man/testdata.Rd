@@ -24,10 +24,6 @@ The datafile contains a list (\code{testdata}) as generated with  \code{get.colo
 }
 }
 
-
-\references{}
-\seealso{}
-
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{datasets}

@@ -1,3 +1,29 @@
+#' This function creates a data object from the Colony2 outputs.
+#'
+#' When provided with the directory name, and the name of the *.DAT colony
+#' input file, this function creates a list object containing pertinent
+#' information from the Colony output files.
+#'
+#'
+#' @param datadir The path to the directory that contains the Colony output
+#' files and the *.DAT Colony input file.
+#' @param filename Optional. The name of the Colony input file. If this
+#' argument is omitted, the command will search for a *.DAT file in the data
+#' directory (datadir) and use that as the input file.
+#' @param colonyVersion The version of Colony that was used (default is 2.0,
+#' other option is 2.0.3).
+#' @return A list, containing data extracted from the Colony output files
+#' @author Owen R. Jones
+#' @seealso \code{\link{run.colony}}, \code{\link{build.colony.input}}
+#' @references \url{http://www.zoo.cam.ac.uk/ioz/software.htm#COLONY}
+#' @keywords manip
+#' @examples
+#'
+#' #Not run
+#' #mynewdata<-get.colony.data("/Users/FredBlogs/Documents/Example/")
+#' #mynewdata<-get.colony.data("/Users/FredBlogs/Documents/Example/","Example1.DAT")
+#'
+#' @export
 get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".DAT", ignore.case=TRUE), colonyVersion = "2.0"){
 
     colony.object = NULL
