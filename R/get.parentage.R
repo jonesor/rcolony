@@ -1,9 +1,38 @@
+#' A function to extract the paternity and maternity information from the
+#' colony object created with get.colony.data.
+#'
+#' This function extracts the paternity and maternity information from a colony
+#' object that was created using \code{\link{get.colony.data}}. The output is a
+#' dataframe with 3 columns. (1) mums, (2) dads, (3) frequency. The output can
+#' either be derived from pairwise-likelihood or the full-likelihood method (if
+#' available).
+#'
+#'
+#' @param colony.object A list created by \code{\link{get.colony.data}}
+#' @param pairwise Should the parentage information be derived from the
+#' pairwise likelihood estimates (TRUE), of from the full likelihood methods
+#' (FALSE). See Wang et al. for details.
+#' @return A data frame with 3 columns. (1) mums, (2) dads, (3) frequency.
+#' @author Owen R. Jones
+#' @seealso \code{\link{get.colony.data}}
+#' @references Wang, J. (2004) Sibship reconstruction from genetic data with
+#' typing errors.  Genetics 166: 1963-1979.
+#' @keywords manip
+#' @examples
+#'
+#'
+#' data(testdata)
+#' parents<-get.parentage(testdata)
+#' head(parents)
+#'
+#'
+#' @export
 `get.parentage` <-
 function(colony.object,pairwise=FALSE){
 
 
 
-if(pairwise==FALSE){			
+if(pairwise==FALSE){
 Offspring<-colony.object$offspring
 Offspring<-merge(Offspring,colony.object$maternity,by.x="offspringID",by.y="OffspringID",sort=FALSE,all.x=TRUE)
 Offspring<-merge(Offspring,colony.object$paternity,by.x="offspringID",by.y="OffspringID",sort=FALSE,all.x=TRUE)
@@ -25,20 +54,20 @@ Offspring<-merge(Offspring,colony.object$fathers,by.x="InferredDad1",by.y="fathe
 
 			xx<-as.data.frame(table(Offspring$InferredMum1,Offspring$InferredDad1))
 			names(xx)<-c("mums","dads","Freq")
-			
+
 			xx2<-expand.grid(mums=colony.object$mothers$motherID,dads=colony.object$fathers$fatherID)
 			xx2$Freq<-rep(0,dim(xx2)[1])
-			
+
 			omit.these<-paste(xx$mums,xx$dads)
-			
+
 			temp<-paste(xx2$mums,xx2$dads)
-			
+
 			xx2<-xx2[!(temp%in%omit.these),]
-			
+
 			xx<-rbind(xx2,xx)
-			
+
 			return(xx)
-			
+
 }else{
 
 Offspring<-colony.object$offspring
@@ -65,18 +94,18 @@ Offspring<-merge(Offspring,colony.object$fathers,by.x="CandidateDad1",by.y="fath
 
 			xx<-as.data.frame(table(Offspring$CandidateMum1,Offspring$CandidateDad1))
 			names(xx)<-c("mums","dads","Freq")
-			
+
 			xx2<-expand.grid(mums=colony.object$mothers$motherID,dads=colony.object$fathers$fatherID)
 			xx2$Freq<-rep(0,dim(xx2)[1])
-			
+
 			omit.these<-paste(xx$mums,xx$dads)
-			
+
 			temp<-paste(xx2$mums,xx2$dads)
-			
+
 			xx2<-xx2[!(temp%in%omit.these),]
-			
+
 			xx<-rbind(xx2,xx)
-			
+
 			return(xx)
 		}}
 
