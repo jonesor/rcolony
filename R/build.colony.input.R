@@ -533,15 +533,16 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
   write(paste(colonyfile$sibshipscaling, "! B, 0/1=Full sibship size scaling =No/Yes"), name, append = TRUE)
 
   #######################################################
-  #  ! 0/1/2/3=No/Weak/Medium/Strong sibship prior; mean paternal & maternal sibship size
+  #  ! 0/1/2/3/4=No/Weak/Medium/Strong/Optimal sibship prior; mean paternal & maternal sibship size
   #######################################################
   cat("Use a sibship size prior?\nSee help for definitions.\n\n")
-  switch(utils::menu(c("No sibship prior", "Weak sibship prior", "Medium sibship prior", "Strong sibship prior")) + 1,
+  switch(utils::menu(c("No sibship prior", "Weak sibship prior", "Medium sibship prior", "Strong sibship prior", "Optimal sibship prior")) + 1,
          cat("Nothing done\n\n\n"),
          colonyfile$sibship.prior <- 0,
          colonyfile$sibship.prior <- 1,
          colonyfile$sibship.prior <- 2,
-         colonyfile$sibship.prior <- 3)
+         colonyfile$sibship.prior <- 3,
+         colonyfile$sibship.prior <- 4)
 
   if(colonyfile$sibship.prior == 0){
     colonyfile$sibship.prior.paternal = 0
@@ -557,7 +558,7 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
         colonyfile$sibship.prior.maternal = as.numeric(scan(n = 1, what = "integer"))
       }
     }
-  write(paste(colonyfile$sibship.prior, colonyfile$sibship.prior.paternal, colonyfile$sibship.prior.maternal, "! 0/1/2/3=No/Weak/Medium/Strong sibship prior; mean paternal & maternal sibship size"), name, append = TRUE)
+  write(paste(colonyfile$sibship.prior, colonyfile$sibship.prior.paternal, colonyfile$sibship.prior.maternal, "! 0/1/2/3/4=No/Weak/Medium/Strong/Optimal sibship prior; mean paternal & maternal sibship size"), name, append = TRUE)
 
   #######################################################
   #  ! B, 0/1=Unknown/Known population allele frequency
