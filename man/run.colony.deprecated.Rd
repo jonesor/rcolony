@@ -4,8 +4,12 @@
 \alias{run.colony.deprecated}
 \title{A function to run Colony2 from within the R environment.}
 \usage{
-run.colony.deprecated(colonyexecpath = "prompt", datfilepath = "prompt",
-  wait = FALSE, monitor = TRUE)
+run.colony.deprecated(
+  colonyexecpath = "prompt",
+  datfilepath = "prompt",
+  wait = FALSE,
+  monitor = TRUE
+)
 }
 \arguments{
 \item{colonyexecpath}{The path to the Colony2 executable. If none is given, and the function defaults to \"prompt\", then you will be prompted to click on the file.}

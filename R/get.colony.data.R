@@ -45,7 +45,7 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
     nLoci = as.numeric(gsub("([A-Za-z0-9]*)([!0-9A-Za-z,/= ]*)", "\\1", nLoci, perl = TRUE))
 
     #Version check
-    #'baseline' is the line number (after blank lines have been stripped) at
+    # The baseline is the line number (after blank lines have been stripped) at
     #which the offspring genotype block begins when population allele
     #frequencies are unknown. 'afLine' is the line holding the
     #unknown/known-allele-frequency flag. Later Colony versions insert extra

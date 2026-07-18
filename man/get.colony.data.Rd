@@ -4,8 +4,11 @@
 \alias{get.colony.data}
 \title{This function creates a data object from the Colony2 outputs.}
 \usage{
-get.colony.data(datadir, filename = list.files(datadir, pattern = ".DAT",
-  ignore.case = TRUE), colonyVersion = "2.0")
+get.colony.data(
+  datadir,
+  filename = list.files(datadir, pattern = ".DAT", ignore.case = TRUE),
+  colonyVersion = "2.0"
+)
 }
 \arguments{
 \item{datadir}{The path to the directory that contains the Colony output
@@ -16,7 +19,9 @@ argument is omitted, the command will search for a *.DAT file in the data
 directory (datadir) and use that as the input file.}
 
 \item{colonyVersion}{The version of Colony that was used (default is 2.0,
-other option is 2.0.3).}
+other options are 2.0.3, 2.0.6 and 2.0.7). Versions 2.0.6 and 2.0.7 cover
+the current 2.0.6.x/2.0.7.x releases, which add extra parameter lines
+(clone inference and full-sibship-size scaling) to the input file header.}
 }
 \value{
 A list, containing data extracted from the Colony output files

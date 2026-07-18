@@ -96,13 +96,27 @@
 #' be related in the pedigree and must be considered together in computing the
 #' likelihood of a configuration.
 #'
-#' \emph{Sibship size prior.} You can choose to use or not use a prior
+#' \emph{Inbreeding.} Indicate whether inbreeding should be allowed for. If no
+#' inbreeding is assumed, the population is taken to be in Hardy-Weinberg
+#' equilibrium and inbreeding is not inferred.
+#'
+#' \emph{Clone inference.} Indicate whether clones (individuals sharing an
+#' identical multilocus genotype) should be inferred. If clones are not
+#' inferred, all offspring genotypes are assumed to come from distinct
+#' individuals.
+#'
+#' \emph{Full sibship size scaling.} Indicate whether full-sibship sizes should
+#' be scaled. Scaling is generally recommended and is selected by default.
+#'
+#' \emph{Sibship size prior.} You can choose to use, or not use, a prior
 #' distribution for the paternal and maternal sibship sizes of the offspring.
-#' Select NO if you have no idea about the average sibship size, or you simply
-#' do not want to use a prior. Select Yes if you have a rough estimate of the
-#' average paternal and maternal sibship sizes and want to use them in the
-#' inference. If you select YES, you are required to provide the average
-#' paternal (\eqn{np}) and maternal (\eqn{nm}) sibship sizes. Using paternal
+#' Select \dQuote{No sibship prior} if you have no idea about the average
+#' sibship size, or you simply do not want to use a prior. Otherwise select a
+#' \dQuote{Weak}, \dQuote{Medium} or \dQuote{Strong} prior according to how much
+#' weight you want the prior to carry, or \dQuote{Optimal} to let Colony
+#' determine the prior itself. For any option other than \dQuote{No sibship
+#' prior} you are required to provide the average paternal (\eqn{np}) and
+#' maternal (\eqn{nm}) sibship sizes. Using paternal
 #' sibship prior as an example, the prior probability is calculated using
 #' Ewen's sampling formula as follows. Suppose paternal sibship size
 #' distribution is \eqn{m = {m1, m2,\ldots , mn}}, where \eqn{mi (i=1, \ldots,

@@ -5,8 +5,13 @@
 \title{A function to plot 2 dimensional categorical data as presence/absence or
 with frequency.}
 \usage{
-categoricalxy(my.data, freqlabs = FALSE, colscheme = "heat",
-  poly.border = FALSE, axes.cex = 1)
+categoricalxy(
+  my.data,
+  freqlabs = FALSE,
+  colscheme = "heat",
+  poly.border = FALSE,
+  axes.cex = 1
+)
 }
 \arguments{
 \item{my.data}{A dataframe with 3 columns. The first two columns should be

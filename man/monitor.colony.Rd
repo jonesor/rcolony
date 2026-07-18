@@ -5,8 +5,14 @@
 \title{A function to monitor the intermediate results of the analysis being
 undertaken by Colony2.}
 \usage{
-monitor.colony(datadir = getwd(), variable = "CrLogL", interv.t = 2,
-  last.few = 10, n = 1, showres = FALSE)
+monitor.colony(
+  datadir = getwd(),
+  variable = "CrLogL",
+  interv.t = 2,
+  last.few = 10,
+  n = 1,
+  showres = FALSE
+)
 }
 \arguments{
 \item{datadir}{The path to the directory that contains the Colony output

@@ -4,8 +4,7 @@
 \alias{plotsibs}
 \title{A function to plot sibships (full and half-sibs) in an x-y style plot.}
 \usage{
-plotsibs(colony.object, maintitle = "sibships", prob = 0.8,
-  pairwise = FALSE)
+plotsibs(colony.object, maintitle = "sibships", prob = 0.8, pairwise = FALSE)
 }
 \arguments{
 \item{colony.object}{A list object derived from the colony data
