@@ -489,6 +489,14 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
   write(paste(colonyfile$diomonoecy, "! 2/1=Dioecious/Monoecious"), name, append = TRUE)
 
   #######################################################
+  #  ! B, 0/1=No inbreeding/inbreeding
+  #######################################################
+  cat("Should inbreeding be allowed for?\nSee help for definitions.\n\n")
+  switch(utils::menu(c("No inbreeding", "Inbreeding")) + 1,
+         cat("Nothing done\n\n\n"), colonyfile$inbreeding <- 0, colonyfile$inbreeding <- 1)
+  write(paste(colonyfile$inbreeding, "! B, 0/1=No inbreeding/inbreeding"), name, append = TRUE)
+
+  #######################################################
   #  ! B, 0/1=Diploid species/HaploDiploid species
   #######################################################
   cat("What kind of species is it?\nSee help for definitions.\n\n")
@@ -509,28 +517,47 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
   write(paste(colonyfile$malepolygamy, colonyfile$femalepolygamy, "! B, 0/1=Polygamy/Monogamy for males & females"), name, append = TRUE)
 
   #######################################################
-  #  ! B, R, R : Use sibship prior, Y/N=1/0. If Yes, give mean paternal, maternal sibship size
+  #  ! B, 0/1=Clone inference =No/Yes
   #######################################################
-  cat("Use sibship prior?\n\n\n")
-  switch(utils::menu(c("Yes", "No")) + 1,
-         cat("Nothing done\n\n\n"), colonyfile$sibship.prior <- 1, colonyfile$sibship.prior <- 0)
+  cat("Should clones (identical multilocus genotypes) be inferred?\nSee help for definitions.\n\n")
+  switch(utils::menu(c("Do not infer clones", "Infer clones")) + 1,
+         cat("Nothing done\n\n\n"), colonyfile$clone <- 0, colonyfile$clone <- 1)
+  write(paste(colonyfile$clone, "! B, 0/1=Clone inference =No/Yes"), name, append = TRUE)
 
-  if(colonyfile$sibship.prior==0){
+  #######################################################
+  #  ! B, 0/1=Full sibship size scaling =No/Yes
+  #######################################################
+  cat("Should full sibship size be scaled?\nSee help for definitions.\n\n")
+  switch(utils::menu(c("Scale full sibship size", "Do not scale full sibship size")) + 1,
+         cat("Nothing done\n\n\n"), colonyfile$sibshipscaling <- 1, colonyfile$sibshipscaling <- 0)
+  write(paste(colonyfile$sibshipscaling, "! B, 0/1=Full sibship size scaling =No/Yes"), name, append = TRUE)
+
+  #######################################################
+  #  ! 0/1/2/3=No/Weak/Medium/Strong sibship prior; mean paternal & maternal sibship size
+  #######################################################
+  cat("Use a sibship size prior?\nSee help for definitions.\n\n")
+  switch(utils::menu(c("No sibship prior", "Weak sibship prior", "Medium sibship prior", "Strong sibship prior")) + 1,
+         cat("Nothing done\n\n\n"),
+         colonyfile$sibship.prior <- 0,
+         colonyfile$sibship.prior <- 1,
+         colonyfile$sibship.prior <- 2,
+         colonyfile$sibship.prior <- 3)
+
+  if(colonyfile$sibship.prior == 0){
     colonyfile$sibship.prior.paternal = 0
     colonyfile$sibship.prior.maternal = 0
-    write(paste(colonyfile$sibship.prior, colonyfile$sibship.prior.paternal, colonyfile$sibship.prior.maternal, "! B, R, R : Use sibship prior, Y/N=1/0. If Yes, give mean paternal, maternal sibship size"), name, append = TRUE)
     }else{
       while(length(colonyfile$sibship.prior.paternal) == 0){
-        cat("Enter the paternal sibship size (number of sibships).\n\n\n")
+        cat("Enter the mean paternal sibship size.\n\n\n")
         colonyfile$sibship.prior.paternal = as.numeric(scan(n = 1, what = "integer"))
       }
 
-    while(length(colonyfile$sibship.prior.maternal) == 0){
-      cat("Enter the maternal sibship size (number of sibships).\n\n\n")
-      colonyfile$sibship.prior.maternal = as.numeric(scan(n = 1, what = "integer"))
+      while(length(colonyfile$sibship.prior.maternal) == 0){
+        cat("Enter the mean maternal sibship size.\n\n\n")
+        colonyfile$sibship.prior.maternal = as.numeric(scan(n = 1, what = "integer"))
+      }
     }
-      write(paste(colonyfile$sibship.prior, colonyfile$sibship.prior.paternal, colonyfile$sibship.prior.maternal, "! B, R, R : Use sibship prior, Y/N=1/0. If Yes, give mean paternal, maternal sibship size"), name, append = TRUE)
-    }
+  write(paste(colonyfile$sibship.prior, colonyfile$sibship.prior.paternal, colonyfile$sibship.prior.maternal, "! 0/1/2/3=No/Weak/Medium/Strong sibship prior; mean paternal & maternal sibship size"), name, append = TRUE)
 
   #######################################################
   #  ! B, 0/1=Unknown/Known population allele frequency
@@ -1417,6 +1444,9 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
                     "Male mating system : ", if(colonyfile$malepolygamy == 0){"Polygamous"}else{"Monogamous"}, "\n",
                     "Female mating system : ", if(colonyfile$femalepolygamy == 0){"Polygamous"}else{"Monogamous"}, "\n",
                     "Dioecious/Monoecious : ", if(colonyfile$diomonoecy == 1){"Monoecious"}else{"Dioecious"}, "\n",
+                    "Inbreeding : ", if(colonyfile$inbreeding == 1){"Yes"}else{"No"}, "\n",
+                    "Clone inference : ", if(colonyfile$clone == 1){"Yes"}else{"No"}, "\n",
+                    "Full sibship size scaling : ", if(colonyfile$sibshipscaling == 1){"Yes"}else{"No"}, "\n",
                     "Number of threads : ", "nA", "\n",
                     "Number of Excluded Paternal Sibships : ", colonyfile$n.excluded.paternal.sibships, "\n",
                     "Number of Excluded Maternal Sibships : ", colonyfile$n.excluded.maternal.sibships, "\n",

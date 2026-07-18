@@ -11,7 +11,9 @@
 #' argument is omitted, the command will search for a *.DAT file in the data
 #' directory (datadir) and use that as the input file.
 #' @param colonyVersion The version of Colony that was used (default is 2.0,
-#' other option is 2.0.3).
+#' other options are 2.0.3, 2.0.6 and 2.0.7). Versions 2.0.6 and 2.0.7 cover
+#' the current 2.0.6.x/2.0.7.x releases, which add extra parameter lines
+#' (clone inference and full-sibship-size scaling) to the input file header.
 #' @return A list, containing data extracted from the Colony output files
 #' @author Owen R. Jones
 #' @seealso \code{\link{run.colony}}, \code{\link{build.colony.input}}
@@ -43,9 +45,18 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
     nLoci = as.numeric(gsub("([A-Za-z0-9]*)([!0-9A-Za-z,/= ]*)", "\\1", nLoci, perl = TRUE))
 
     #Version check
-    if(colonyVersion == "2.0.3"){baseline = 23}
+    #'baseline' is the line number (after blank lines have been stripped) at
+    #which the offspring genotype block begins when population allele
+    #frequencies are unknown. Later Colony versions insert extra parameter
+    #lines into the input-file header (a clone-inference line and a
+    #full-sibship-size scaling line), which pushes the offspring block further
+    #down the file.
     if(colonyVersion == "2.0"){baseline = 22}
-    if(!colonyVersion %in% c("2.0","2.0.3")){stop("This function only works with Colony version 2.0 or 2.0.3")}
+    if(colonyVersion == "2.0.3"){baseline = 23}
+    #Colony 2.0.6.x / 2.0.7.x add the clone-inference and full-sibship-size
+    #scaling lines relative to 2.0.3 (two extra header lines).
+    if(colonyVersion %in% c("2.0.6", "2.0.7")){baseline = 25}
+    if(!colonyVersion %in% c("2.0", "2.0.3", "2.0.6", "2.0.7")){stop("This function only works with Colony versions 2.0, 2.0.3, 2.0.6 or 2.0.7")}
 
 
     #Check whether allele frequency is known
@@ -71,6 +82,13 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
 
     nFathers = as.numeric(strsplit(nParents, split = " +")[[1]][1])
     nMothers = as.numeric(strsplit(nParents, split = " +")[[1]][2])
+
+    #If the header offset for the specified colonyVersion does not match the
+    #file, the line we expect to hold the candidate-parent counts will not be
+    #two numbers. Fail loudly rather than silently returning garbage.
+    if(is.na(nFathers) | is.na(nMothers)){
+        stop("Could not locate the candidate-parent counts. The header offset for colonyVersion \"", colonyVersion, "\" does not match this file. Check that colonyVersion matches the Colony version that produced it.")
+    }
 
     fathers = x[(OFSStart + (n + 2)):(OFSStart + (n + 1) + nFathers)]
     mothers = x[(OFSStart + (n + 2) + nFathers):(OFSStart + (n + 1) + nFathers + nMothers)]
