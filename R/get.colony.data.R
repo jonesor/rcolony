@@ -191,8 +191,15 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
     		halfsibs = NA
     	}
 
-    sibs = stats::na.omit(rbind(fullsibs, halfsibs))
-    sibs$type = as.factor(sibs$type)
+    #Combine whichever of the full/half sib files were present. If neither
+    #exists, store NA rather than crashing on rbind(NA, NA).
+    sib.parts = Filter(is.data.frame, list(fullsibs, halfsibs))
+    if(length(sib.parts) > 0){
+        sibs = do.call(rbind, sib.parts)
+        sibs$type = as.factor(sibs$type)
+    }else{
+        sibs = NA
+    }
 
     colony.object$sibs = sibs
 
@@ -218,10 +225,19 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
     		halfsibs = NA
     	}
 
-    sibs = stats::na.omit(rbind(fullsibs, halfsibs))
-    sibs$type = as.factor(sibs$type)
+    #Combine whichever of the pairwise full/half sib files were present. If
+    #neither exists, store NA rather than crashing on rbind(NA, NA). This is
+    #kept separate from the (non-pairwise) $sibs element, as plotsibs() reads
+    #$pairwise.sibs for pairwise==TRUE.
+    sib.parts = Filter(is.data.frame, list(fullsibs, halfsibs))
+    if(length(sib.parts) > 0){
+        sibs = do.call(rbind, sib.parts)
+        sibs$type = as.factor(sibs$type)
+    }else{
+        sibs = NA
+    }
 
-    colony.object$sibs = sibs
+    colony.object$pairwise.sibs = sibs
 
     return(colony.object)
     }
