@@ -130,20 +130,22 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
     ###################################################
     #assigned parentage (nonpairwise)
     ###################################################
-    mfile = list.files(path = datadir, pattern = "\\.Maternity")[1]
-    if(!is.na(mfile)){
-        if(length(mfile) > 1){
-            warning("There are too many \"\ *.Maternity\" files in your project directory. \nYou should check them.")
+    mfiles = list.files(path = datadir, pattern = "\\.Maternity")
+    if(length(mfiles) > 0){
+        if(length(mfiles) > 1){
+            warning("There are too many \"*.Maternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
         }
+        mfile = mfiles[1]
         maternity = utils::read.table(paste(datadir, mfile, sep=""), header = TRUE, fill = TRUE, na.strings = "")
         colony.object$maternity = maternity
     }
 
-    pfile = list.files(path = datadir, pattern = "\\.Paternity")[1]
-    if(!is.na(pfile)){
-        if(length(pfile) > 1){
-            warning("There are too many \"\ *.Paternity\" files in your project directory. \nYou should check them.")
+    pfiles = list.files(path = datadir, pattern = "\\.Paternity")
+    if(length(pfiles) > 0){
+        if(length(pfiles) > 1){
+            warning("There are too many \"*.Paternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
         }
+        pfile = pfiles[1]
         paternity = utils::read.table(paste(datadir, pfile, sep=""), header = TRUE, fill = TRUE, na.strings = "")
         colony.object$paternity = paternity
     }
@@ -151,21 +153,22 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
     ###################################################
     #assigned parentage (pairwise)
     ###################################################
-    mfile = list.files(path = datadir, pattern = "\\.PairwiseMaternity")[1]
-
-    if(!is.na(mfile)){
-        if(length(mfile) > 1){
-            warning("There are too many \"\ *.PairwiseMaternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
+    mfiles = list.files(path = datadir, pattern = "\\.PairwiseMaternity")
+    if(length(mfiles) > 0){
+        if(length(mfiles) > 1){
+            warning("There are too many \"*.PairwiseMaternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
         }
+        mfile = mfiles[1]
         pairwise.maternity = utils::read.table(paste(datadir, mfile, sep = ""), header = TRUE, sep = ",")
         colony.object$pairwise.maternity = pairwise.maternity
     }
 
-    pfile = list.files(path = datadir, pattern = "\\.PairwisePaternity")[1]
-    if(!is.na(pfile)){
-        if(length(pfile) > 1){
-            warning("There are too many \"\ *.PairwisePaternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
+    pfiles = list.files(path = datadir, pattern = "\\.PairwisePaternity")
+    if(length(pfiles) > 0){
+        if(length(pfiles) > 1){
+            warning("There are too many \"*.PairwisePaternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
         }
+        pfile = pfiles[1]
         pairwise.paternity = utils::read.table(paste(datadir, pfile, sep=""), header = TRUE, sep = ",")
         colony.object$pairwise.paternity = pairwise.paternity
     }
