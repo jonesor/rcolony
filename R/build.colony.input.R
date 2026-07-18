@@ -718,7 +718,7 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
       #Whole number warning
       if(is.whole(colonyfile$n.father) == FALSE){
         utils::flush.console()
-        colonyfile = colonyfile[which(names(colonyfile) != "n.fathers")]
+        colonyfile = colonyfile[which(names(colonyfile) != "n.father")]
         warning("The number of fathers must be a whole number!\n", immediate. = TRUE)
       }
     }
@@ -771,7 +771,7 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
       #Whole number warning
       if(is.whole(colonyfile$n.mother) == FALSE){
         utils::flush.console()
-        colonyfile = colonyfile[which(names(colonyfile) != "n.mothers")]
+        colonyfile = colonyfile[which(names(colonyfile) != "n.mother")]
         warning("The number of mothers must be a whole number!\n", immediate. = TRUE)
       }
     }
@@ -834,7 +834,7 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
       #Whole number warning
       if(is.whole(colonyfile$n.known.paternities.and.sibships) == FALSE){
         utils::flush.console()
-        colonyfile = colonyfile[which(names(colonyfile) != "n.known.paternal.dyads")]
+        colonyfile = colonyfile[which(names(colonyfile) != "n.known.paternities.and.sibships")]
         warning("The number of known paternities and sibships must be a whole number!\n", immediate. = TRUE)
       }
     }
@@ -917,7 +917,7 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
       #Whole number warning
       if(is.whole(colonyfile$n.known.maternities.and.sibships) == FALSE){
         utils::flush.console()
-        colonyfile = colonyfile[which(names(colonyfile) != "n.known.maternal.dyads")]
+        colonyfile = colonyfile[which(names(colonyfile) != "n.known.maternities.and.sibships")]
         warning("The number of known maternities and sibships must be a whole number!\n", immediate. = TRUE)
       }
     }
@@ -1357,7 +1357,7 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
     temp1 = as.data.frame(colonyfile$allele.frequency)
     temp1 = temp1[, 1:dim(temp1)[2] - 1]
     names(temp1) = paste(paste("Locus-", rep(1:(dim(temp1)[2] / 2), each = 2), sep = ""), rep(1:2, (dim(temp1)[2]/2)), sep=".")
-    utils::write.table(temp1, "MarkerTypeErrorRate.txt", row.names = FALSE, quote = FALSE, col.names = TRUE)
+    utils::write.table(temp1, "AlleleFrequency.txt", row.names = FALSE, quote = FALSE, col.names = TRUE)
     }
 
   #OffspringGenotype.txt
@@ -1410,8 +1410,8 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
                     "Number of offspring in the sample : ", colonyfile$n.offspring, "\n",
                     "Number of male candidates : ", colonyfile$n.father, "\n",
                     "Number of female candidates : ", colonyfile$n.mother, "\n",
-                    "Number of known paternal sibships : ", colonyfile$n.paternal.sibs.or.paternities, "\n",
-                    "Number of known maternal sibships : ", colonyfile$n.maternal.sibs.or.maternities, "\n",
+                    "Number of known paternal sibships : ", colonyfile$n.known.paternities.and.sibships, "\n",
+                    "Number of known maternal sibships : ", colonyfile$n.known.maternities.and.sibships, "\n",
                     "Number of offspring with excluded fathers : ", colonyfile$n.excluded.paternities, "\n",
                     "Number of offspring with excluded mothers : ", colonyfile$n.excluded.maternities, "\n",
                     "Male mating system : ", if(colonyfile$malepolygamy == 0){"Polygamous"}else{"Monogamous"}, "\n",
@@ -1419,7 +1419,7 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
                     "Dioecious/Monoecious : ", if(colonyfile$diomonoecy == 1){"Monoecious"}else{"Dioecious"}, "\n",
                     "Number of threads : ", "nA", "\n",
                     "Number of Excluded Paternal Sibships : ", colonyfile$n.excluded.paternal.sibships, "\n",
-                    "Number of Excluded Maternal Sibships : ", colonyfile$n.excluded.paternal.sibships, "\n",
+                    "Number of Excluded Maternal Sibships : ", colonyfile$n.excluded.maternal.sibships, "\n",
                     "Seed for random number generator : ", colonyfile$rseed, "\n",
                     "Allele frequency : ", if(colonyfile$updateallelefreq == 1){"Updating by accounting for the inferred relationship"}else{"No updating by accounting for the inferred relationship"}, "\n",
                     "Species : ", if(colonyfile$ploidy == 1){"HaploDiploid"}else{"Diploid"}, "\n",

@@ -156,8 +156,8 @@ graphics::title(xlab="NumIterate",ylab=variable)
 #50lines?
 
 tmp<-readLines(paste(datadir,"temp.txt",sep="/"))
-n<-50
-from<-if(length(tmp)-n>0){length(tmp)-n>0}else{1}
+nlines<-50
+from<-if(length(tmp)-nlines>0){length(tmp)-nlines}else{1}
 to<-length(tmp)
 
 utils::write.table(tmp[from:to],file=paste(datadir,"temp.txt",sep="/"),row.names=FALSE,col.names=FALSE,quote=FALSE)

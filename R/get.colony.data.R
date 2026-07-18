@@ -139,7 +139,7 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
 
     pfile = list.files(path = datadir, pattern = "\\.PairwisePaternity")[1]
     if(!is.na(pfile)){
-        if(length(mfile) > 1){
+        if(length(pfile) > 1){
             warning("There are too many \"\ *.PairwisePaternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
         }
         pairwise.paternity = utils::read.table(paste(datadir, pfile, sep=""), header = TRUE, sep = ",")
