@@ -1,4 +1,4 @@
-# rcolony (development version)
+# rcolony 1.4.0
 
 ## New features
 
