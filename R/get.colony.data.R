@@ -47,26 +47,32 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
     #Version check
     #'baseline' is the line number (after blank lines have been stripped) at
     #which the offspring genotype block begins when population allele
-    #frequencies are unknown. Later Colony versions insert extra parameter
-    #lines into the input-file header (a clone-inference line and a
-    #full-sibship-size scaling line), which pushes the offspring block further
-    #down the file.
-    if(colonyVersion == "2.0"){baseline = 22}
-    if(colonyVersion == "2.0.3"){baseline = 23}
-    #Colony 2.0.6.x / 2.0.7.x add the clone-inference and full-sibship-size
-    #scaling lines relative to 2.0.3 (two extra header lines).
-    if(colonyVersion %in% c("2.0.6", "2.0.7")){baseline = 25}
+    #frequencies are unknown. 'afLine' is the line holding the
+    #unknown/known-allele-frequency flag. Later Colony versions insert extra
+    #parameter lines into the input-file header (an inbreeding line, a
+    #clone-inference line and a full-sibship-size scaling line), which pushes
+    #both of these further down the file.
+    if(colonyVersion == "2.0"){baseline = 22; afLine = 11}
+    if(colonyVersion == "2.0.3"){baseline = 23; afLine = 11}
+    #Colony 2.0.6.x / 2.0.7.x add the inbreeding, clone-inference and
+    #full-sibship-size scaling lines relative to 2.0.3 (three extra header
+    #lines, all before the allele-frequency flag), verified against a 2.0.7
+    #-format input file.
+    if(colonyVersion %in% c("2.0.6", "2.0.7")){baseline = 26; afLine = 14}
     if(!colonyVersion %in% c("2.0", "2.0.3", "2.0.6", "2.0.7")){stop("This function only works with Colony versions 2.0, 2.0.3, 2.0.6 or 2.0.7")}
 
 
     #Check whether allele frequency is known
-    AFKnown = x[11]
+    AFKnown = x[afLine]
     AFKnown = sub("^[\t\n\f\r ]*", "", AFKnown) #remove leading whitespace
     AFKnown = as.numeric(gsub("([A-Za-z0-9]*)([!0-9A-Za-z,/= ]*)", "\\1", AFKnown, perl = TRUE)) == 1
     if(AFKnown){
-    	#If allele frequency is known then there is an extra row defining the number of alleles per locus (e.g. "12 13 14 15 16  !Number of alleles per locus")
-    	#Then there are a number of rows equal to the number of loci
-    OFSStart = 2 * nLoci + (baseline + 2)
+    	#If allele frequency is known then there is an extra row defining the
+    	#number of alleles per locus (e.g. "12 13 14 15 16  !Number of alleles
+    	#per locus"), followed by two rows per locus (allele identities and the
+    	#corresponding frequencies). That is 1 + 2*nLoci extra lines before the
+    	#offspring block.
+    OFSStart = 2 * nLoci + (baseline + 1)
     }else{
     	OFSStart = baseline
     }
