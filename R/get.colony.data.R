@@ -1,3 +1,12 @@
+# Read a Colony *.Maternity / *.Paternity file. Colony 2.0.7.x writes these as
+# comma-delimited files; earlier versions used whitespace. Detect which from
+# the header line.
+read.parentage.file <- function(path){
+    header <- readLines(path, n = 1)
+    delim <- if(grepl(",", header, fixed = TRUE)) "," else ""
+    utils::read.table(path, header = TRUE, sep = delim, fill = TRUE, na.strings = "")
+}
+
 #' This function creates a data object from the Colony2 outputs.
 #'
 #' When provided with the directory name, and the name of the *.DAT colony
@@ -11,7 +20,7 @@
 #' argument is omitted, the command will search for a *.DAT file in the data
 #' directory (datadir) and use that as the input file.
 #' @param colonyVersion The version of Colony that was used (default is 2.0,
-#' other options are 2.0.3, 2.0.6 and 2.0.7). Versions 2.0.6 and 2.0.7 cover
+#' other options are 2.0.3, 2.0.6, 2.0.7, 2.0.7.1 and 2.0.7.2). Versions 2.0.6 and later cover
 #' the current 2.0.6.x/2.0.7.x releases, which add extra parameter lines
 #' (clone inference and full-sibship-size scaling) to the input file header.
 #' @return A list, containing data extracted from the Colony output files
@@ -58,8 +67,8 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
     #full-sibship-size scaling lines relative to 2.0.3 (three extra header
     #lines, all before the allele-frequency flag), verified against a 2.0.7
     #-format input file.
-    if(colonyVersion %in% c("2.0.6", "2.0.7")){baseline = 26; afLine = 14}
-    if(!colonyVersion %in% c("2.0", "2.0.3", "2.0.6", "2.0.7")){stop("This function only works with Colony versions 2.0, 2.0.3, 2.0.6 or 2.0.7")}
+    if(colonyVersion %in% c("2.0.6", "2.0.7", "2.0.7.1", "2.0.7.2")){baseline = 26; afLine = 14}
+    if(!colonyVersion %in% c("2.0", "2.0.3", "2.0.6", "2.0.7", "2.0.7.1", "2.0.7.2")){stop("This function only works with Colony versions 2.0, 2.0.3, 2.0.6, 2.0.7, 2.0.7.1 or 2.0.7.2")}
 
 
     #Check whether allele frequency is known
@@ -136,7 +145,7 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
             warning("There are too many \"*.Maternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
         }
         mfile = mfiles[1]
-        maternity = utils::read.table(paste(datadir, mfile, sep=""), header = TRUE, fill = TRUE, na.strings = "")
+        maternity = read.parentage.file(paste(datadir, mfile, sep=""))
         colony.object$maternity = maternity
     }
 
@@ -146,7 +155,7 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
             warning("There are too many \"*.Paternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
         }
         pfile = pfiles[1]
-        paternity = utils::read.table(paste(datadir, pfile, sep=""), header = TRUE, fill = TRUE, na.strings = "")
+        paternity = read.parentage.file(paste(datadir, pfile, sep=""))
         colony.object$paternity = paternity
     }
 
@@ -159,7 +168,7 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
             warning("There are too many \"*.PairwiseMaternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
         }
         mfile = mfiles[1]
-        pairwise.maternity = utils::read.table(paste(datadir, mfile, sep = ""), header = TRUE, sep = ",")
+        pairwise.maternity = utils::read.table(paste(datadir, mfile, sep = ""), header = TRUE, sep = ",", comment.char = "")
         colony.object$pairwise.maternity = pairwise.maternity
     }
 
@@ -169,7 +178,7 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
             warning("There are too many \"*.PairwisePaternity\" files in your project directory. \nYou should check them. \nUsing the first one.")
         }
         pfile = pfiles[1]
-        pairwise.paternity = utils::read.table(paste(datadir, pfile, sep=""), header = TRUE, sep = ",")
+        pairwise.paternity = utils::read.table(paste(datadir, pfile, sep=""), header = TRUE, sep = ",", comment.char = "")
         colony.object$pairwise.paternity = pairwise.paternity
     }
 
