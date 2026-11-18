@@ -40,7 +40,7 @@ sibs<-colony.object$pairwise.sibs
 sibs$Probability<-rep(1,dim(sibs)[1])}
 
 
-alloffspring<-colony.object$offspring
+alloffspring<-colony.object$offspring[colony.object$offspring$offspringID != "Unknown",] #ignore spurious "Unknown" row in objects from earlier versions
 alloffspring$offspring.numID<-as.numeric(alloffspring$offspring.numID)
 
 	 #Apply the numeric ID to the sibship data.

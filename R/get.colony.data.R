@@ -35,7 +35,7 @@ read.parentage.file <- function(path){
 #' #mynewdata<-get.colony.data("/Users/FredBlogs/Documents/Example/","Example1.DAT")
 #'
 #' @export
-get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".DAT", ignore.case=TRUE), colonyVersion = "2.0"){
+get.colony.data <- function(datadir, filename = list.files(datadir, pattern = "\\.DAT$", ignore.case=TRUE), colonyVersion = "2.0"){
 
     colony.object = NULL
     x = readLines(paste(datadir, filename, sep = ""))
@@ -130,7 +130,6 @@ get.colony.data <- function(datadir, filename = list.files(datadir, pattern = ".
 
     offspring = data.frame(offspringID=offspring, offspring.numID = as.numeric(as.factor(offspring)))
     offspring$offspringID = as.character(offspring$offspringID)
-    offspring = rbind(offspring, c("Unknown", max(offspring$offspring.numID) + 1))
 
     colony.object$fathers = fathers
     colony.object$mothers = mothers

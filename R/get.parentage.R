@@ -33,7 +33,8 @@ function(colony.object,pairwise=FALSE){
 
 
 if(pairwise==FALSE){
-Offspring<-colony.object$offspring
+#Earlier versions of get.colony.data added a spurious "Unknown" offspring row; ignore it.
+Offspring<-colony.object$offspring[colony.object$offspring$offspringID != "Unknown",]
 Offspring<-merge(Offspring,colony.object$maternity,by.x="offspringID",by.y="OffspringID",sort=FALSE,all.x=TRUE)
 Offspring<-merge(Offspring,colony.object$paternity,by.x="offspringID",by.y="OffspringID",sort=FALSE,all.x=TRUE)
 
@@ -70,7 +71,8 @@ Offspring<-merge(Offspring,colony.object$fathers,by.x="InferredDad1",by.y="fathe
 
 }else{
 
-Offspring<-colony.object$offspring
+#Earlier versions of get.colony.data added a spurious "Unknown" offspring row; ignore it.
+Offspring<-colony.object$offspring[colony.object$offspring$offspringID != "Unknown",]
 Offspring<-merge(Offspring,colony.object$pairwise.maternity,by.x="offspringID",by.y="OffspringID",sort=FALSE,all.x=TRUE)
 names(Offspring)[names(Offspring)=="CandidateID"]<-"CandidateMum1"
 names(Offspring)[names(Offspring)=="Confidence"]<-"CandidateMum1.Confidence"

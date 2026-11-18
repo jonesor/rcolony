@@ -6,7 +6,7 @@
 \usage{
 get.colony.data(
   datadir,
-  filename = list.files(datadir, pattern = ".DAT", ignore.case = TRUE),
+  filename = list.files(datadir, pattern = "\\\\.DAT$", ignore.case = TRUE),
   colonyVersion = "2.0"
 )
 }
