@@ -7,7 +7,7 @@
 get.colony.data(
   datadir,
   filename = list.files(datadir, pattern = "\\\\.DAT$", ignore.case = TRUE),
-  colonyVersion = "2.0"
+  colonyVersion = NULL
 )
 }
 \arguments{
@@ -18,10 +18,12 @@ files and the *.DAT Colony input file.}
 argument is omitted, the command will search for a *.DAT file in the data
 directory (datadir) and use that as the input file.}
 
-\item{colonyVersion}{The version of Colony that was used (default is 2.0,
-other options are 2.0.3, 2.0.6, 2.0.7, 2.0.7.1 and 2.0.7.2). Versions 2.0.6 and later cover
-the current 2.0.6.x/2.0.7.x releases, which add extra parameter lines
-(clone inference and full-sibship-size scaling) to the input file header.}
+\item{colonyVersion}{Optional. The version of Colony that produced the input
+file. By default the layout of the input file (which changed between Colony
+versions) is detected automatically from its structure, which is usually what
+you want. Give a version (for example \code{"2.0.7.2"}) to insist on the
+layout used by that version, in which case an error is given if the file does
+not match. Colony 2.0.x versions are understood.}
 }
 \value{
 A list, containing data extracted from the Colony output files

@@ -14,6 +14,27 @@ Tested end to end against COLONY 2.0.7.2 (Mac build, 15 July 2025).
   COLONY (>= 2.0.6.3) requires on the known-paternity and known-maternity
   lines. Previously COLONY rejected any input file that had known dyads.
 
+## Reader and writer share one description of the file layout
+
+* The layout of a COLONY input file (which header lines each version has, the
+  run settings, the marker rows, and the order of the known and excluded
+  relationships) is now described once, in `R/colony-format.R`, and used by both
+  `write.colony.input()` and `get.colony.data()`. Previously the writer built the
+  lines by hand and the reader hard-coded line numbers (22, 23 and 26) for each
+  version.
+
+* `get.colony.data()` now reads the input file by its structure and detects the
+  layout itself, so `colonyVersion` is optional (it now defaults to `NULL`;
+  the default used to be `"2.0"`, which mis-read files from later versions).
+  Giving a version still works and still stops with an error if the file does
+  not match it. The result is unchanged for files that were read correctly
+  before.
+
+* Fixed in the process, found by checking against 13 real input files from
+  COLONY 2.0.3 era datasets: files with no candidate fathers or mothers were
+  read as having two phantom candidates called "0"; and a file containing
+  whitespace-only lines (not just empty ones) was read one line out of step.
+
 ## New features
 
 * New `write.colony.input()` creates a COLONY input file non-interactively,

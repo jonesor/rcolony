@@ -223,8 +223,10 @@ write.colony.input <- function(file = "Colony2.DAT",
   }
 
   #######################################################
-  #Build the file
+  #Build the file. The order of the lines and their comments come from the
+  #layout description in colony-format.R, which the reader uses as well.
   #######################################################
+  layout <- colony.layout(colony.layout.name(version))
   row.text <- function(x) paste(x[!is.na(x)], collapse = " ")
   table.text <- function(x, comment = NULL){
     out <- vapply(seq_len(nrow(x)), function(i) row.text(unlist(x[i, ], use.names = FALSE)), "")
@@ -234,83 +236,80 @@ write.colony.input <- function(file = "Colony2.DAT",
   flag <- function(x) as.integer(x)
   num <- function(x) format(x, scientific = FALSE, trim = TRUE)
 
-  L <- c(
-    paste(dataset.name, "! C, Dataset name, Length<51"),
-    paste(output.name, "! C, Main output file name, Length<21"),
-    paste(n.offspring, "! I, Number of offspring in the sample"),
-    paste(n.loci, "! I, Number of loci"),
-    paste(num(seed), "! I, Seed for random number generator"),
-    paste(flag(update.allele.freq), "! B, 0/1=Not updating/updating allele frequency"),
-    paste(if(species == "dioecious") 2 else 1, "! 2/1=Dioecious/Monoecious"),
-    paste(flag(inbreeding), "! B, 0/1=No inbreeding/inbreeding"),
-    paste(if(ploidy == "diploid") 0 else 1, "! B, 0/1=Diploid species/HaploDiploid species"),
-    paste(flag(male.monogamy), flag(female.monogamy), "! B, 0/1=Polygamy/Monogamy for males & females"),
-    paste(flag(clone.inference), "! B, 0/1=Clone inference =No/Yes"),
-    paste(flag(scale.sibship.size), "! B, 0/1=Full sibship size scaling =No/Yes"),
-    paste(match(sibship.prior, c("none", "weak", "medium", "strong", "optimal")) - 1, num(mean.sibship.size[1]), num(mean.sibship.size[2]),
-          "! 0/1/2/3/4=No/Weak/Medium/Strong/Optimal sibship prior; mean paternal & maternal sibship size"),
-    paste(flag(!is.null(allele.freq)), "! B, 0/1=Unknown/Known population allele frequency")
-  )
+  L <- colony.spec.lines(layout$header, list(
+    dataset = dataset.name,
+    output = output.name,
+    n.offspring = n.offspring,
+    n.loci = n.loci,
+    seed = num(seed),
+    update.allele.freq = flag(update.allele.freq),
+    species = if(species == "dioecious") 2 else 1,
+    inbreeding = flag(inbreeding),
+    ploidy = if(ploidy == "diploid") 0 else 1,
+    mating = paste(flag(male.monogamy), flag(female.monogamy)),
+    clone.inference = flag(clone.inference),
+    scale.sibship.size = flag(scale.sibship.size),
+    sibship.prior = paste(match(sibship.prior, c("none", "weak", "medium", "strong", "optimal")) - 1,
+                          num(mean.sibship.size[1]), num(mean.sibship.size[2])),
+    known.allele.freq = flag(!is.null(allele.freq))))
   if(!is.null(allele.freq)){
-    L <- c(L, "", paste(paste(n.alleles, collapse = " "), "!Number of alleles per locus"), table.text(allele.freq))
+    L <- c(L, "", paste(paste(n.alleles, collapse = " "), colony.allele.freq.comment), table.text(allele.freq))
   }
   L <- c(L, "",
-    paste(n.runs, "! I, Number of runs"),
-    paste(match(run.length, c("short", "medium", "long")), "! I, Length of Run (1, 2, 3) = (Short, Medium, Long)"),
-    paste(if(monitor.by == "iterations") 0 else 1, "! B, 0/1=Monitor method by Iterate#/Time in second"),
-    paste(num(monitor.interval), "! I, Monitor interval in Iterate#/Seconds"),
-    paste(if(platform == "windows") 1 else 0, "! B, 0/1=Other platform/Windows execution"),
-    paste(if(likelihood == "full") 1 else 0, "! 1/0=Full-likelihood/pairwise-likelihood score method"),
-    paste(match(precision, c("low", "medium", "high")), "! 1/2/3=low/medium/high precision"),
+    colony.spec.lines(colony.run.spec, list(
+      n.runs = n.runs,
+      run.length = match(run.length, c("short", "medium", "long")),
+      monitor.by = if(monitor.by == "iterations") 0 else 1,
+      monitor.interval = num(monitor.interval),
+      platform = if(platform == "windows") 1 else 0,
+      likelihood = if(likelihood == "full") 1 else 0,
+      precision = match(precision, c("low", "medium", "high")))),
     "",
-    paste(row.text(markers[1, ]), "!Marker IDs"),
-    paste(row.text(markers[2, ]), "!Marker types, 0/1=Codominant/Dominant"),
-    paste(row.text(markers[3, ]), "!Marker-specific allelic dropout rate"),
-    paste(row.text(markers[4, ]), "!Other marker-specific typing-error rate"),
+    colony.spec.lines(layout$markers, stats::setNames(
+      lapply(seq_len(nrow(layout$markers)), function(i) row.text(markers[i, ])), layout$markers$key)),
     "",
-    table.text(offspring, "!Offspring ID and genotypes"),
+    table.text(offspring, colony.candidate.comments[["offspring"]]),
     "",
-    paste(father.prob, mother.prob, "!Probabilities that the father and mother of an offspring included in candidates"),
-    paste(n.fathers, n.mothers, "!Numbers of candidate males and females"),
+    paste(father.prob, mother.prob, colony.candidate.comments[["probabilities"]]),
+    paste(n.fathers, n.mothers, colony.candidate.comments[["numbers"]]),
     "",
     if(n.fathers > 0) table.text(fathers),
     "",
     if(n.mothers > 0) table.text(mothers),
-    ""
-  )
+    "")
 
-  dyad.block <- function(k, label, kind){
+  section <- colony.section.spec
+  rownames(section) <- section$key
+  dyad.block <- function(key, k){
     n <- if(is.null(k$dyads)) 0 else nrow(k$dyads)
     # The threshold only applies to dyads, so it is written as 0 when there are none
     # (as in the example dataset distributed with COLONY).
-    c(paste(n, if(n > 0) k$threshold else 0, paste0("!Number of known ", label, ", mismatch threshold")),
-      if(n > 0) paste(k$dyads$offspring, k$dyads$parent, c(paste("!IDs of known offspring-", kind, " dyad"), rep("", n - 1))),
+    c(paste(n, if(n > 0) k$threshold else 0, section[key, "count"]),
+      if(n > 0) paste(k$dyads$offspring, k$dyads$parent, c(section[key, "row"], rep("", n - 1))),
       "")
   }
-  sib.block <- function(k, adjective, parent){
-    n <- length(k$sibships)
-    c(paste(n, paste0("!Number of known ", adjective, " sibships with unknown ", parent, "s")),
+  sib.block <- function(key, k){
+    c(paste(length(k$sibships), section[key, "count"]),
       vapply(k$sibships, function(o) paste(length(o), paste(o, collapse = " ")), ""),
       "")
   }
-  excl.block <- function(rows, label, what){
-    c(paste(length(rows), paste0("!Number of offspring with known excluded ", label)),
+  excl.block <- function(key, rows){
+    c(paste(length(rows), section[key, "count"]),
       vapply(seq_along(rows), function(i){
         r <- rows[[i]]
-        paste(r[[1]], length(r[[2]]), paste(r[[2]], collapse = " "),
-              if(i == 1) paste0("!Offspring ID, number of excluded ", what, ", the IDs of excluded ", what) else "")
+        paste(r[[1]], length(r[[2]]), paste(r[[2]], collapse = " "), if(i == 1) section[key, "row"] else "")
       }, ""),
       "")
   }
   L <- c(L,
-    dyad.block(kp, "paternities", "father"),
-    dyad.block(km, "maternities", "mother"),
-    sib.block(kp, "paternal", "father"),
-    sib.block(km, "maternal", "mother"),
-    excl.block(ex.pat, "paternity", "males"),
-    excl.block(ex.mat, "maternity", "females"),
-    excl.block(ex.psib, "paternal sibships", "offspring"),
-    excl.block(ex.msib, "maternal sibships", "offspring"))
+    dyad.block("known.paternities", kp),
+    dyad.block("known.maternities", km),
+    sib.block("known.paternal.sibships", kp),
+    sib.block("known.maternal.sibships", km),
+    excl.block("excluded.paternities", ex.pat),
+    excl.block("excluded.maternities", ex.mat),
+    excl.block("excluded.paternal.sibships", ex.psib),
+    excl.block("excluded.maternal.sibships", ex.msib))
 
   writeLines(trimws(L, which = "right"), file)
 

@@ -81,10 +81,14 @@ mydata <- get.colony.data("/path/to/output/", colonyVersion = "2.0.7")
 
 ## COLONY version support
 
-`get.colony.data()` understands the input-file layouts of COLONY versions
-`2.0`, `2.0.3`, `2.0.6` and `2.0.7` (the last covering the current
-2.0.6.x/2.0.7.x releases). Pass the matching version via the `colonyVersion`
-argument; `build.colony.input()` writes the current-format input file.
+The layout of the COLONY input file changed between releases (extra header
+lines were added in 2.0.6, and an extra marker row in 2.0.3). `get.colony.data()`
+detects the layout from the structure of the file, so you do not need to say
+which COLONY version produced it; `colonyVersion` is only needed to insist on a
+particular layout. `write.colony.input()` and `build.colony.input()` write the
+current layout (COLONY 2.0.6.3 or later), and have been tested against COLONY
+2.0.7.2. The layout is described once, in `R/colony-format.R`, and used by both
+the writer and the reader.
 
 ## Testing
 

@@ -19,10 +19,12 @@ read.parentage.file <- function(path){
 #' @param filename Optional. The name of the Colony input file. If this
 #' argument is omitted, the command will search for a *.DAT file in the data
 #' directory (datadir) and use that as the input file.
-#' @param colonyVersion The version of Colony that was used (default is 2.0,
-#' other options are 2.0.3, 2.0.6, 2.0.7, 2.0.7.1 and 2.0.7.2). Versions 2.0.6 and later cover
-#' the current 2.0.6.x/2.0.7.x releases, which add extra parameter lines
-#' (clone inference and full-sibship-size scaling) to the input file header.
+#' @param colonyVersion Optional. The version of Colony that produced the input
+#' file. By default the layout of the input file (which changed between Colony
+#' versions) is detected automatically from its structure, which is usually what
+#' you want. Give a version (for example \code{"2.0.7.2"}) to insist on the
+#' layout used by that version, in which case an error is given if the file does
+#' not match. Colony 2.0.x versions are understood.
 #' @return A list, containing data extracted from the Colony output files
 #' @author Owen R. Jones
 #' @seealso \code{\link{run.colony}}, \code{\link{build.colony.input}}
@@ -35,98 +37,35 @@ read.parentage.file <- function(path){
 #' #mynewdata<-get.colony.data("/Users/FredBlogs/Documents/Example/","Example1.DAT")
 #'
 #' @export
-get.colony.data <- function(datadir, filename = list.files(datadir, pattern = "\\.DAT$", ignore.case=TRUE), colonyVersion = "2.0"){
+get.colony.data <- function(datadir, filename = list.files(datadir, pattern = "\\.DAT$", ignore.case=TRUE), colonyVersion = NULL){
 
     colony.object = NULL
-    x = readLines(paste(datadir, filename, sep = ""))
 
-    #Strip out empty rows, if there are any.
-    if(length(which(x == "")) > 0){x = x[-which(x == ""|x == " ")]}
+    #Read the IDs of the offspring and candidate parents from the input file.
+    #The layout of the file (which depends on the Colony version) is detected from
+    #its structure unless colonyVersion says which one to expect; see
+    #colony-format.R.
+    layout <- if(is.null(colonyVersion)) NULL else colony.layout.name(colonyVersion)
+    dat <- tryCatch(read.colony.dat(paste(datadir, filename, sep = ""), layout = layout),
+                    error = function(e){
+                      hint <- if(is.null(layout)) "" else "\nCheck that colonyVersion matches the Colony version that produced the file, or leave it out so that the layout is detected automatically."
+                      stop(conditionMessage(e), hint, call. = FALSE)
+                    })
 
-    #Extract the number of offspring from the dat file. This information is used for error checking later on.
-    n = x[3]
-    n = sub("^[\t\n\f\r ]*", "", n) #remove leading whitespace
-    n = as.numeric(gsub("([A-Za-z0-9]*)([!0-9A-Za-z,/= ]*)", "\\1", n, perl = TRUE))
+    ids <- function(x) if(is.null(x)) character(0) else x[[1]]
+    mothers <- ids(dat$mothers)
+    fathers <- ids(dat$fathers)
+    offspring <- ids(dat$offspring)
 
-    #Extract the number of loci
-    nLoci = x[4]
-    nLoci = sub("^[\t\n\f\r ]*", "", nLoci) #remove leading whitespace
-    nLoci = as.numeric(gsub("([A-Za-z0-9]*)([!0-9A-Za-z,/= ]*)", "\\1", nLoci, perl = TRUE))
-
-    #Version check
-    # The baseline is the line number (after blank lines have been stripped) at
-    #which the offspring genotype block begins when population allele
-    #frequencies are unknown. 'afLine' is the line holding the
-    #unknown/known-allele-frequency flag. Later Colony versions insert extra
-    #parameter lines into the input-file header (an inbreeding line, a
-    #clone-inference line and a full-sibship-size scaling line), which pushes
-    #both of these further down the file.
-    if(colonyVersion == "2.0"){baseline = 22; afLine = 11}
-    if(colonyVersion == "2.0.3"){baseline = 23; afLine = 11}
-    #Colony 2.0.6.x / 2.0.7.x add the inbreeding, clone-inference and
-    #full-sibship-size scaling lines relative to 2.0.3 (three extra header
-    #lines, all before the allele-frequency flag), verified against a 2.0.7
-    #-format input file.
-    if(colonyVersion %in% c("2.0.6", "2.0.7", "2.0.7.1", "2.0.7.2")){baseline = 26; afLine = 14}
-    if(!colonyVersion %in% c("2.0", "2.0.3", "2.0.6", "2.0.7", "2.0.7.1", "2.0.7.2")){stop("This function only works with Colony versions 2.0, 2.0.3, 2.0.6, 2.0.7, 2.0.7.1 or 2.0.7.2")}
-
-
-    #Check whether allele frequency is known
-    AFKnown = x[afLine]
-    AFKnown = sub("^[\t\n\f\r ]*", "", AFKnown) #remove leading whitespace
-    AFKnown = as.numeric(gsub("([A-Za-z0-9]*)([!0-9A-Za-z,/= ]*)", "\\1", AFKnown, perl = TRUE)) == 1
-    if(AFKnown){
-    	#If allele frequency is known then there is an extra row defining the
-    	#number of alleles per locus (e.g. "12 13 14 15 16  !Number of alleles
-    	#per locus"), followed by two rows per locus (allele identities and the
-    	#corresponding frequencies). That is 1 + 2*nLoci extra lines before the
-    	#offspring block.
-    OFSStart = 2 * nLoci + (baseline + 1)
-    }else{
-    	OFSStart = baseline
+    #Assign numeric codes to fathers and mothers, with an extra "Unknown" parent
+    #(The codes are character, as they have always been in this object.)
+    with.unknown <- function(ids, id.name, num.name){
+      codes <- as.numeric(as.factor(ids))
+      data.frame(stats::setNames(list(c(ids, "Unknown"), as.character(c(codes, max(c(0, codes)) + 1))), c(id.name, num.name)),
+                 stringsAsFactors = FALSE)
     }
-
-    ###################################################
-    #Lists of offspring, fathers and mothers
-    ###################################################
-    # Starts at line 24 - 24+(n-1)
-    offspring = x[OFSStart:(OFSStart + (n - 1))]
-
-    nParents = x[OFSStart + (n+1)]
-    nParents = sub("^[\t\n\f\r ]*", "", nParents) #remove leading whitespace
-
-    nFathers = as.numeric(strsplit(nParents, split = " +")[[1]][1])
-    nMothers = as.numeric(strsplit(nParents, split = " +")[[1]][2])
-
-    #If the header offset for the specified colonyVersion does not match the
-    #file, the line we expect to hold the candidate-parent counts will not be
-    #two numbers. Fail loudly rather than silently returning garbage.
-    if(is.na(nFathers) | is.na(nMothers)){
-        stop("Could not locate the candidate-parent counts. The header offset for colonyVersion \"", colonyVersion, "\" does not match this file. Check that colonyVersion matches the Colony version that produced it.")
-    }
-
-    fathers = x[(OFSStart + (n + 2)):(OFSStart + (n + 1) + nFathers)]
-    mothers = x[(OFSStart + (n + 2) + nFathers):(OFSStart + (n + 1) + nFathers + nMothers)]
-
-    #Remove leading whitespace
-    offspring = sub("^[\t\n\f\r ]*", "", offspring) #remove leading whitespace
-    fathers = sub("^[\t\n\f\r ]*", "", fathers) #remove leading whitespace
-    mothers = sub("^[\t\n\f\r ]*", "", mothers) #remove leading whitespace
-
-    offspring = as.vector(sapply(offspring, function(x){gsub("([A-Za-z0-9]*)([!0-9A-Za-z,/= ]*)", "\\1", x, perl = TRUE)})) #extract names
-    fathers = as.vector(sapply(fathers, function(x){gsub("([A-Za-z0-9]*)([!0-9A-Za-z,/= ]*)", "\\1", x, perl = TRUE)})) #extract names
-    mothers = as.vector(sapply(mothers, function(x){gsub("([A-Za-z0-9]*)([!0-9A-Za-z,/= ]*)", "\\1", x, perl = TRUE)})) #extract names
-
-    if(n != length(offspring)){stop("Wrong number of offspring. Check your files.")}
-
-    #Assign numeric codes to fathers and mothers
-    mothers = data.frame(motherID=mothers, mother.numID = as.numeric(as.factor(mothers)))
-    mothers$motherID = as.character(mothers$motherID)
-    mothers = rbind(mothers, c("Unknown", max(mothers$mother.numID) + 1))
-
-    fathers = data.frame(fatherID=fathers, father.numID = as.numeric(as.factor(fathers)))
-    fathers$fatherID = as.character(fathers$fatherID)
-    fathers = rbind(fathers, c("Unknown",max(fathers$father.numID) + 1))
+    mothers = with.unknown(mothers, "motherID", "mother.numID")
+    fathers = with.unknown(fathers, "fatherID", "father.numID")
 
     offspring = data.frame(offspringID=offspring, offspring.numID = as.numeric(as.factor(offspring)))
     offspring$offspringID = as.character(offspring$offspringID)
