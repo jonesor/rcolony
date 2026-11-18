@@ -424,7 +424,8 @@ Wang, J. (2004) Sibship reconstruction from genetic data with
 typing errors.  Genetics 166: 1963-1979.
 }
 \seealso{
-\code{\link{run.colony}}
+\code{\link{write.colony.input}} for a non-interactive version that
+can be scripted, \code{\link{run.colony}}
 }
 \author{
 Owen R. Jones

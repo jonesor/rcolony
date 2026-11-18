@@ -406,7 +406,8 @@
 #' @return A text file is produced. This file can be used by Colony2 as an
 #' input file.
 #' @author Owen R. Jones
-#' @seealso \code{\link{run.colony}}
+#' @seealso \code{\link{write.colony.input}} for a non-interactive version that
+#' can be scripted, \code{\link{run.colony}}
 #' @references Wang, J. (2004) Sibship reconstruction from genetic data with
 #' typing errors.  Genetics 166: 1963-1979.
 #' @keywords manip
@@ -1343,7 +1344,8 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
     for (i in 1:dim(colonyfile$excluded.paternal.sibships)[1]){
       csum[i] = length(colonyfile$excluded.paternal.sibships[i, ][!is.na(colonyfile$excluded.paternal.sibships[i, ])])
       }
-    csum = csum - 1
+    #The comment column added above is not a sibling ID, so subtract it as well as the offspring ID.
+    csum = csum - 2
 
     colonyfile$excluded.paternal.sibships = cbind(colonyfile$excluded.paternal.sibships[, 1], csum, colonyfile$excluded.paternal.sibships[, 2:ncol(colonyfile$excluded.paternal.sibships)])
 
@@ -1411,7 +1413,8 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
     for (i in 1:dim(colonyfile$excluded.maternal.sibships)[1]){
       csum[i] = length(colonyfile$excluded.maternal.sibships[i, ][!is.na(colonyfile$excluded.maternal.sibships[i, ])])
       }
-    csum = csum - 1
+    #The comment column added above is not a sibling ID, so subtract it as well as the offspring ID.
+    csum = csum - 2
 
     colonyfile$excluded.maternal.sibships = cbind(colonyfile$excluded.maternal.sibships[, 1], csum, colonyfile$excluded.maternal.sibships[, 2:ncol(colonyfile$excluded.maternal.sibships)])
 

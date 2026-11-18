@@ -102,15 +102,45 @@ simulate_colony_data <- function(dir, seed = 20251118, n.loci = 20,
   })
   write_ragged(ex, p("excluded_paternity.txt"))
 
+  # --- Extra inputs, drawn after everything above so that the data and files
+  # above are unchanged. Used to exercise the less common sections.
+  # Known allele frequencies: two rows per locus (allele IDs, then frequencies)
+  af <- unlist(lapply(freqs, function(f) {
+    list(paste(seq_along(f), collapse = " "), paste(sprintf("%.4f", f), collapse = " "))
+  }))
+  writeLines(af, p("allele_freq.txt"))
+
+  # Excluded maternities: for 3 offspring, two candidate females that are not the mother
+  exm <- lapply(truth$offspring[c(3, 10, 17)], function(o) {
+    m <- truth$mother[truth$offspring == o]
+    c(o, sample(setdiff(rownames(cand.f), m), 2))
+  })
+  write_ragged(exm, p("excluded_maternity.txt"))
+
+  # Excluded sibships: offspring that cannot share a father (or mother) with the
+  # first one listed, taken from families with a different father (or mother).
+  other <- function(o, col) {
+    sample(truth$offspring[truth[[col]] != truth[[col]][truth$offspring == o]], 2)
+  }
+  write_ragged(lapply(c("O5", "O20"), function(o) c(o, other(o, "father"))),
+               p("excluded_paternal_sibships.txt"))
+  write_ragged(lapply(c("O2", "O30", "O45"), function(o) c(o, other(o, "mother"))),
+               p("excluded_maternal_sibships.txt"))
+
   list(dir = dir, truth = truth, n.loci = n.loci, n.offspring = nrow(off),
        n.males = nrow(cand.m), n.females = nrow(cand.f),
        n.known.paternal = length(paternal), n.known.maternal = length(maternal),
-       n.excluded.paternity = length(ex),
+       n.excluded.paternity = length(ex), n.excluded.maternity = length(exm),
+       n.excluded.paternal.sibships = 2, n.excluded.maternal.sibships = 3,
        files = list(offspring = p("offspring.txt"), fathers = p("fathers.txt"),
                     mothers = p("mothers.txt"), markers = p("markers.txt"),
                     known.paternal = p("known_paternal.txt"),
                     known.maternal = p("known_maternal.txt"),
-                    excluded.paternity = p("excluded_paternity.txt")))
+                    excluded.paternity = p("excluded_paternity.txt"),
+                    excluded.maternity = p("excluded_maternity.txt"),
+                    excluded.paternal.sibships = p("excluded_paternal_sibships.txt"),
+                    excluded.maternal.sibships = p("excluded_maternal_sibships.txt"),
+                    allele.freq = p("allele_freq.txt")))
 }
 
 write_ragged <- function(rows, path) {

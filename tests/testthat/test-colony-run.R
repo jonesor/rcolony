@@ -57,3 +57,39 @@ test_that("build -> run -> parse recovers a simulated pedigree with complex inpu
   expect_gte(sum(same & inferred) / sum(inferred), 0.9)   # precision
   expect_gte(sum(same & inferred) / sum(same), 0.8)       # recall
 })
+
+test_that("COLONY accepts a file from write.colony.input with every optional section", {
+  skip_on_cran()
+  skip_if_not_installed("withr")
+  exec <- Sys.getenv("RCOLONY_EXEC")
+  skip_if(exec == "" || !file.exists(exec), "RCOLONY_EXEC not set to a COLONY executable")
+  exec <- normalizePath(exec)
+
+  dir <- withr::local_tempdir()
+  sim <- simulate_colony_data(file.path(dir, "sim"))
+  f <- sim$files
+  out <- write.colony.input(
+    file.path(dir, "all.DAT"), offspring = f$offspring, markers = f$markers,
+    fathers = f$fathers, mothers = f$mothers, father.prob = 0.8, mother.prob = 0.8,
+    known.paternal = f$known.paternal, paternity.threshold = 2,
+    known.maternal = f$known.maternal, maternity.threshold = 2,
+    excluded.paternities = f$excluded.paternity,
+    excluded.maternities = f$excluded.maternity,
+    excluded.paternal.sibships = f$excluded.paternal.sibships,
+    excluded.maternal.sibships = f$excluded.maternal.sibships,
+    allele.freq = f$allele.freq, dataset.name = "allsections", output.name = "allsections",
+    run.length = "short", likelihood = "pairwise", precision = "low")
+
+  utils::capture.output(ret <- run.colony(exec, out))
+  expect_equal(ret, 0)
+  # COLONY stops with "Errors in DATA" and writes no results if any section is malformed
+  expect_true(file.exists(file.path(dir, "allsections.Paternity")))
+  expect_false(file.exists(file.path(dir, "all.ErrorMessage")))
+
+  x <- get.colony.data(paste0(dir, "/"), filename = "all.DAT", colonyVersion = "2.0.7.2")
+  tr <- sim$truth
+  m <- merge(tr, x$paternity, by.x = "offspring", by.y = "OffspringID", all.x = TRUE)
+  ok <- !is.na(m$InferredDad1)
+  expect_gte(mean(ok), 0.8)
+  expect_gte(mean(m$InferredDad1[ok] == m$father[ok]), 0.9)
+})

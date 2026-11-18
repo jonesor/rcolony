@@ -3,43 +3,51 @@
 # functions that pop answers from a queue. The queue must follow the order of
 # the prompts; if it runs out, or a prompt receives the wrong kind of answer, the
 # mock errors so a prompt-order change in the package is noticed.
+#
+# Menu answers are the 1-based position of the choice in the wizard's menu.
 build_input_scripted <- function(sim, dir, name = "Colony2.DAT",
                                  known.paternal = TRUE, known.maternal = TRUE,
-                                 excluded.paternity = TRUE, seed = 1234,
-                                 run.length = 2, sibship.prior = 1,
-                                 known.threshold = 2, precision = 3) {
+                                 excluded.paternity = TRUE,
+                                 excluded.maternity = FALSE,
+                                 excluded.paternal.sibships = FALSE,
+                                 excluded.maternal.sibships = FALSE,
+                                 allele.freq = FALSE,
+                                 seed = 1234, run.length = 2, sibship.prior = 1,
+                                 mean.sibship.size = c(2, 2),
+                                 known.threshold = 2, precision = 3,
+                                 update.allele.freq = 1, species = 1,
+                                 inbreeding = 1, ploidy = 1, male.mating = 2,
+                                 female.mating = 2, clone = 1, scaling = 1,
+                                 n.runs = 1, monitor = 1, interval = 10000,
+                                 platform = 2, likelihood = 1,
+                                 father.prob = 0.8, mother.prob = 0.8) {
   f <- sim$files
+  count_and_file <- function(use, n, file) {
+    list(a_scan(if (use) n else 0), if (use) a_path(file))
+  }
   ans <- list(
     a_scan("scripted"), a_scan("scripted"), a_scan("A scripted test dataset"),
     a_scan(sim$n.offspring), a_scan(sim$n.loci), a_scan(seed),
-    a_menu(1),  # not updating allele frequency
-    a_menu(1),  # dioecious
-    a_menu(1),  # no inbreeding
-    a_menu(1),  # diploid
-    a_menu(2),  # males polygamous
-    a_menu(2),  # females polygamous
-    a_menu(1),  # do not infer clones
-    a_menu(1),  # scale full sibship size
+    a_menu(update.allele.freq), a_menu(species), a_menu(inbreeding),
+    a_menu(ploidy), a_menu(male.mating), a_menu(female.mating),
+    a_menu(clone), a_menu(scaling),
     a_menu(sibship.prior + 1),
-    if (sibship.prior > 0) list(a_scan(2), a_scan(2)),
-    a_menu(1),  # unknown allele frequencies
-    a_scan(1),  # number of runs
-    a_menu(run.length),
-    a_menu(1),  # monitor by iterate
-    a_scan(10000),
-    a_menu(2),  # non-Windows
-    a_menu(1),  # full likelihood
-    a_menu(precision),
+    if (sibship.prior > 0) list(a_scan(mean.sibship.size[1]), a_scan(mean.sibship.size[2])),
+    a_menu(if (allele.freq) 2 else 1),
+    if (allele.freq) a_path(f$allele.freq),
+    a_scan(n.runs), a_menu(run.length), a_menu(monitor), a_scan(interval),
+    a_menu(platform), a_menu(likelihood), a_menu(precision),
     a_path(f$markers), a_path(f$offspring),
-    a_scan(0.8), a_scan(sim$n.males), a_path(f$fathers),
-    a_scan(0.8), a_scan(sim$n.females), a_path(f$mothers),
-    a_scan(if (known.paternal) sim$n.known.paternal else 0),
-    if (known.paternal) list(a_path(f$known.paternal), a_scan(known.threshold)),
-    a_scan(if (known.maternal) sim$n.known.maternal else 0),
-    if (known.maternal) list(a_path(f$known.maternal), a_scan(known.threshold)),
-    a_scan(if (excluded.paternity) sim$n.excluded.paternity else 0),
-    if (excluded.paternity) a_path(f$excluded.paternity),
-    a_scan(0), a_scan(0), a_scan(0)  # excluded maternities and sibships: none
+    a_scan(father.prob), a_scan(sim$n.males), a_path(f$fathers),
+    a_scan(mother.prob), a_scan(sim$n.females), a_path(f$mothers),
+    if (known.paternal) list(a_scan(sim$n.known.paternal), a_path(f$known.paternal), a_scan(known.threshold))
+    else a_scan(0),
+    if (known.maternal) list(a_scan(sim$n.known.maternal), a_path(f$known.maternal), a_scan(known.threshold))
+    else a_scan(0),
+    count_and_file(excluded.paternity, sim$n.excluded.paternity, f$excluded.paternity),
+    count_and_file(excluded.maternity, sim$n.excluded.maternity, f$excluded.maternity),
+    count_and_file(excluded.paternal.sibships, sim$n.excluded.paternal.sibships, f$excluded.paternal.sibships),
+    count_and_file(excluded.maternal.sibships, sim$n.excluded.maternal.sibships, f$excluded.maternal.sibships)
   )
   queue <- unlist(ans, recursive = TRUE, use.names = TRUE)
   kinds <- sub("[0-9]+$", "", names(queue))

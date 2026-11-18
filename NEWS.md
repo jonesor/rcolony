@@ -14,7 +14,21 @@ Tested end to end against COLONY 2.0.7.2 (Mac build, 15 July 2025).
   COLONY (>= 2.0.6.3) requires on the known-paternity and known-maternity
   lines. Previously COLONY rejected any input file that had known dyads.
 
+## New features
+
+* New `write.colony.input()` creates a COLONY input file non-interactively,
+  from data frames or file paths, so an analysis can be scripted and re-run.
+  All settings are checked before anything is written, and the file is written
+  in one go. It writes a short `<name>_ProjectInformation.txt` summary beside
+  the DAT file (`project.info = FALSE` to skip). `build.colony.input()` is
+  unchanged for now.
+
 ## Bug fixes
+
+* `build.colony.input()` wrote the wrong count for each offspring on an
+  excluded paternal or maternal sibship line (one too many), which COLONY
+  rejects ("Error in reading known excluded paternal sibship").
+
 
 * `build.colony.input()` no longer fails with "the condition has length > 1"
   when there are known paternities, maternities or sibships.
