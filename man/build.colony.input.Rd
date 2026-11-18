@@ -18,7 +18,8 @@ are whitespace delimited).}
 }
 \value{
 A text file is produced. This file can be used by Colony2 as an
-input file.
+input file. The path of the file is returned invisibly (or \code{NULL} if
+the wizard was cancelled before the file was written).
 }
 \description{
 This function prompts the user to provide information about their system in
@@ -26,7 +27,15 @@ order to correctly build and format a Colony2 input file.
 }
 \details{
 This wizard will guide the user through the process of creating an input
-file to be executed by Colony2.
+file to be executed by Colony2. Each answer is checked as soon as it is
+given (for example, that a data file has the expected number of rows and
+columns, and that the IDs in known and excluded relationships exist), and the
+question is asked again if there is a problem.
+
+At the end the wizard shows the equivalent call to
+\code{\link{write.colony.input}}, which does the actual work, and asks for
+confirmation before writing the file. Keep that call in a script if you want
+to repeat the analysis without answering the questions again.
 
 \emph{Dataset name.} Provide a name for the dataset.
 

@@ -3,20 +3,6 @@
 # from the same simulated data), and test its checks directly. No COLONY
 # binary is needed.
 
-# Strip comments, blank lines and extra white space, so that only the content
-# that COLONY reads is compared.
-dat_content <- function(path) {
-  x <- readLines(path)
-  x <- sub("!.*$", "", x)
-  x <- gsub("[[:space:]]+", " ", trimws(x))
-  x <- x[x != ""]
-  # compare numbers as numbers, so 0.0590 and 0.059 are the same
-  vapply(strsplit(x, " "), function(tok) {
-    num <- suppressWarnings(as.numeric(tok))
-    paste(ifelse(is.na(num), tok, format(num, digits = 10)), collapse = " ")
-  }, "")
-}
-
 sim_in <- function(dir) simulate_colony_data(file.path(dir, "sim"))
 
 # The core call corresponding to each wizard scenario in helper-scenarios.R

@@ -165,8 +165,6 @@ write.colony.input <- function(file = "Colony2.DAT",
   #######################################################
   #Check single settings
   #######################################################
-  is.num1 <- function(x) is.numeric(x) && length(x) == 1 && !is.na(x)
-  is.whole1 <- function(x) is.num1(x) && x == floor(x)
   is.flag <- function(x) is.logical(x) && length(x) == 1 && !is.na(x)
   for(nm in c("update.allele.freq", "inbreeding", "male.monogamy", "female.monogamy", "clone.inference", "scale.sibship.size", "project.info", "overwrite")){
     if(!is.flag(get(nm))) stop("`", nm, "` must be TRUE or FALSE.", call. = FALSE)
@@ -193,122 +191,35 @@ write.colony.input <- function(file = "Colony2.DAT",
   }
 
   #######################################################
-  #Read and check the data tables
+  #Read and check the data tables (see colony-checks.R)
   #######################################################
-  offspring <- colony.table(offspring, "offspring", delim)
-  markers <- colony.table(markers, "markers", delim)
-
-  if(nrow(markers) != 4) stop("`markers` must have 4 rows (ID, type, dropout rate, error rate) but has ", nrow(markers), ".", call. = FALSE)
+  markers <- check.markers(markers, delim)
   n.loci <- ncol(markers)
-  if(anyNA(markers)) stop("`markers` contains missing values.", call. = FALSE)
-  if(!all(markers[2, ] %in% c("0", "1"))) stop("Marker types (row 2 of `markers`) must be 0 (codominant) or 1 (dominant).", call. = FALSE)
-  rates <- suppressWarnings(as.numeric(unlist(markers[3:4, ])))
-  if(anyNA(rates) || any(rates < 0 | rates > 1)) stop("Marker error rates (rows 3 and 4 of `markers`) must be numbers between 0 and 1.", call. = FALSE)
-
-  geno.table <- function(x, name){
-    x <- colony.table(x, name, delim)
-    if(is.null(x)) return(NULL)
-    if(ploidy == "diploid" && ncol(x) != 1 + 2 * n.loci){
-      stop("`", name, "` has ", ncol(x), " columns but ", 1 + 2 * n.loci, " were expected (an ID and two alleles for each of the ", n.loci, " loci).", call. = FALSE)
-    }
-    if(anyDuplicated(x[[1]])) stop("`", name, "` has duplicated IDs: ", paste(unique(x[[1]][duplicated(x[[1]])]), collapse = ", "), call. = FALSE)
-    x
-  }
-  offspring <- geno.table(offspring, "offspring")
-  fathers <- geno.table(fathers, "fathers")
-  mothers <- geno.table(mothers, "mothers")
+  offspring <- check.genotypes(offspring, "offspring", n.loci, ploidy, delim)
+  fathers <- check.genotypes(fathers, "fathers", n.loci, ploidy, delim)
+  mothers <- check.genotypes(mothers, "mothers", n.loci, ploidy, delim)
   n.offspring <- nrow(offspring)
   n.fathers <- if(is.null(fathers)) 0 else nrow(fathers)
   n.mothers <- if(is.null(mothers)) 0 else nrow(mothers)
+  father.prob <- check.probability(father.prob, n.fathers, "father.prob")
+  mother.prob <- check.probability(mother.prob, n.mothers, "mother.prob")
 
-  check.prob <- function(p, n, name){
-    if(n == 0){
-      if(is.null(p)) p <- 0
-    }
-    if(is.null(p)) stop("`", name, "` is required when there are candidate parents.", call. = FALSE)
-    if(!is.num1(p) || p < 0 || p > 1) stop("`", name, "` must be a number between 0 and 1.", call. = FALSE)
-    p
-  }
-  father.prob <- check.prob(father.prob, n.fathers, "father.prob")
-  mother.prob <- check.prob(mother.prob, n.mothers, "mother.prob")
+  paternity.threshold <- check.threshold(paternity.threshold, "paternity.threshold", n.loci)
+  maternity.threshold <- check.threshold(maternity.threshold, "maternity.threshold", n.loci)
+  kp <- check.known(known.paternal, "known.paternal", fathers[[1]], offspring[[1]], "father", delim)
+  km <- check.known(known.maternal, "known.maternal", mothers[[1]], offspring[[1]], "mother", delim)
+  kp$threshold <- paternity.threshold
+  km$threshold <- maternity.threshold
 
-  # Known parentage / sibships
-  known <- function(x, name, parents, parent.label, threshold, threshold.name){
-    x <- colony.table(x, name, delim)
-    if(!is.whole1(threshold) || threshold < 0 || threshold > n.loci){
-      stop("`", threshold.name, "` must be a whole number between 0 and the number of loci (", n.loci, ").", call. = FALSE)
-    }
-    out <- list(dyads = NULL, sibships = NULL, threshold = threshold)
-    if(is.null(x) || nrow(x) == 0) return(out)
-    ids <- x[[1]]
-    if(anyNA(ids)) stop("`", name, "` has rows with no ID in the first column (use 0 for an unknown ", parent.label, ").", call. = FALSE)
-    real <- ids[ids != "0"]
-    if(anyDuplicated(real)) stop("`", name, "` lists a ", parent.label, " more than once: ", paste(unique(real[duplicated(real)]), collapse = ", "), call. = FALSE)
-    if(!all(real %in% parents)){
-      stop("`", name, "` contains ", parent.label, "s that are not among the candidates: ", paste(setdiff(real, parents), collapse = ", "), call. = FALSE)
-    }
-    kids <- unlist(x[, -1, drop = FALSE], use.names = FALSE)
-    kids <- kids[!is.na(kids)]
-    if(!all(kids %in% offspring[[1]])){
-      stop("`", name, "` contains offspring that are not in `offspring`: ", paste(setdiff(kids, offspring[[1]]), collapse = ", "), call. = FALSE)
-    }
-    d <- NULL
-    for(i in which(ids != "0")){
-      o <- unlist(x[i, -1], use.names = FALSE); o <- o[!is.na(o)]
-      if(length(o) > 0) d <- rbind(d, data.frame(offspring = o, parent = ids[i], stringsAsFactors = FALSE))
-    }
-    s <- lapply(which(ids == "0"), function(i){o <- unlist(x[i, -1], use.names = FALSE); o[!is.na(o)]})
-    s <- Filter(function(o) length(o) > 0, s)
-    out$dyads <- d
-    out$sibships <- s
-    out
-  }
-  kp <- known(known.paternal, "known.paternal", fathers[[1]], "father", paternity.threshold, "paternity.threshold")
-  km <- known(known.maternal, "known.maternal", mothers[[1]], "mother", maternity.threshold, "maternity.threshold")
+  ex.pat <- check.exclusions(excluded.paternities, "excluded.paternities", offspring[[1]], fathers[[1]], "fathers", delim)
+  ex.mat <- check.exclusions(excluded.maternities, "excluded.maternities", offspring[[1]], mothers[[1]], "mothers", delim)
+  ex.psib <- check.exclusions(excluded.paternal.sibships, "excluded.paternal.sibships", offspring[[1]], offspring[[1]], "offspring", delim)
+  ex.msib <- check.exclusions(excluded.maternal.sibships, "excluded.maternal.sibships", offspring[[1]], offspring[[1]], "offspring", delim)
 
-  # Exclusions
-  excl <- function(x, name, allowed, what){
-    x <- colony.table(x, name, delim)
-    if(is.null(x) || nrow(x) == 0) return(list())
-    if(anyNA(x[[1]])) stop("`", name, "` has rows with no offspring ID in the first column.", call. = FALSE)
-    if(!all(x[[1]] %in% offspring[[1]])){
-      stop("`", name, "` contains offspring that are not in `offspring`: ", paste(setdiff(x[[1]], offspring[[1]]), collapse = ", "), call. = FALSE)
-    }
-    if(anyDuplicated(x[[1]])) stop("`", name, "` lists an offspring more than once: ", paste(unique(x[[1]][duplicated(x[[1]])]), collapse = ", "), call. = FALSE)
-    rows <- lapply(seq_len(nrow(x)), function(i){o <- unlist(x[i, -1], use.names = FALSE); c(x[[1]][i], list(o[!is.na(o)]))})
-    bad <- unique(unlist(lapply(rows, function(r) setdiff(r[[2]], allowed))))
-    if(length(bad) > 0) stop("`", name, "` contains ", what, " that are not in the data: ", paste(bad, collapse = ", "), call. = FALSE)
-    rows
-  }
-  ex.pat <- excl(excluded.paternities, "excluded.paternities", fathers[[1]], "fathers")
-  ex.mat <- excl(excluded.maternities, "excluded.maternities", mothers[[1]], "mothers")
-  ex.psib <- excl(excluded.paternal.sibships, "excluded.paternal.sibships", offspring[[1]], "offspring")
-  ex.msib <- excl(excluded.maternal.sibships, "excluded.maternal.sibships", offspring[[1]], "offspring")
-
-  # Allele frequencies
   if(!is.null(allele.freq)){
-    if(is.list(allele.freq) && !is.data.frame(allele.freq)){
-      af <- lapply(allele.freq, function(f){
-        ids <- names(f); if(is.null(ids)) ids <- seq_along(f)
-        rbind(as.character(ids), as.character(f))
-      })
-      width <- max(vapply(af, ncol, 1L))
-      af <- do.call(rbind, lapply(af, function(m) cbind(m, matrix(NA_character_, 2, width - ncol(m)))))
-      allele.freq <- as.data.frame(af, stringsAsFactors = FALSE)
-    }else{
-      allele.freq <- colony.table(allele.freq, "allele.freq", delim)
-    }
-    if(nrow(allele.freq) != 2 * n.loci){
-      stop("`allele.freq` must have two rows for each of the ", n.loci, " loci but has ", nrow(allele.freq), " rows.", call. = FALSE)
-    }
-    id.rows <- allele.freq[seq(1, 2 * n.loci, 2), , drop = FALSE]
-    fr.rows <- allele.freq[seq(2, 2 * n.loci, 2), , drop = FALSE]
-    n.alleles <- rowSums(!is.na(fr.rows))
-    if(any(n.alleles != rowSums(!is.na(id.rows)))) stop("`allele.freq` has loci where the number of allele IDs and frequencies differ.", call. = FALSE)
-    fr <- suppressWarnings(matrix(as.numeric(as.matrix(fr.rows)), nrow = n.loci))
-    if(any(is.na(fr[!is.na(as.matrix(fr.rows))])) || any(fr < 0, na.rm = TRUE)) stop("`allele.freq` has frequencies that are not non-negative numbers.", call. = FALSE)
-    bad <- which(abs(rowSums(fr, na.rm = TRUE) - 1) > 0.01)
-    if(length(bad) > 0) warning("Allele frequencies do not sum to 1 (within 0.01) at loci: ", paste(bad, collapse = ", "), call. = FALSE)
+    af <- check.allele.freq(allele.freq, n.loci, delim)
+    allele.freq <- af$table
+    n.alleles <- af$n.alleles
   }
 
   #######################################################
@@ -436,23 +347,4 @@ write.colony.input <- function(file = "Colony2.DAT",
   }
 
   invisible(normalizePath(file))
-}
-
-# Read a data table that was supplied as a path, data frame or matrix, and
-# return a data frame of character columns with NA for empty cells. NULL stays
-# NULL.
-colony.table <- function(x, name, delim = ""){
-  if(is.null(x)) return(NULL)
-  if(is.character(x) && length(x) == 1 && is.null(dim(x))){
-    if(!file.exists(x)) stop("`", name, "`: the file `", x, "` does not exist.", call. = FALSE)
-    n <- max(utils::count.fields(x, sep = delim), 1)
-    x <- utils::read.table(x, header = FALSE, colClasses = "character", sep = delim, fill = TRUE, flush = TRUE, na.strings = "", col.names = seq_len(n))
-  }else if(is.matrix(x) || is.data.frame(x)){
-    x <- as.data.frame(x, stringsAsFactors = FALSE)
-  }else{
-    stop("`", name, "` must be a data frame, a matrix or the path to a file.", call. = FALSE)
-  }
-  x[] <- lapply(x, function(col){col <- trimws(as.character(col)); col[col == ""] <- NA; col})
-  names(x) <- seq_len(ncol(x))
-  x
 }

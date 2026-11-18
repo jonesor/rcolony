@@ -5,7 +5,7 @@
 # mock errors so a prompt-order change in the package is noticed.
 #
 # Menu answers are the 1-based position of the choice in the wizard's menu.
-build_input_scripted <- function(sim, dir, name = "Colony2.DAT",
+wizard_answers <- function(sim,
                                  known.paternal = TRUE, known.maternal = TRUE,
                                  excluded.paternity = TRUE,
                                  excluded.maternity = FALSE,
@@ -47,9 +47,17 @@ build_input_scripted <- function(sim, dir, name = "Colony2.DAT",
     count_and_file(excluded.paternity, sim$n.excluded.paternity, f$excluded.paternity),
     count_and_file(excluded.maternity, sim$n.excluded.maternity, f$excluded.maternity),
     count_and_file(excluded.paternal.sibships, sim$n.excluded.paternal.sibships, f$excluded.paternal.sibships),
-    count_and_file(excluded.maternal.sibships, sim$n.excluded.maternal.sibships, f$excluded.maternal.sibships)
+    count_and_file(excluded.maternal.sibships, sim$n.excluded.maternal.sibships, f$excluded.maternal.sibships),
+    a_menu(1)  # "Write the input file"
   )
-  queue <- unlist(ans, recursive = TRUE, use.names = TRUE)
+  unlist(ans, recursive = TRUE, use.names = TRUE)
+}
+
+# Run build.colony.input() answering its prompts from `queue` (a named character
+# vector whose names say what kind of prompt each answer is for: scan1, menu1 or
+# path1). Returns the path of the file, with the wizard's console output (and
+# any warnings it gave) as attributes.
+run_scripted <- function(queue, dir, name = "Colony2.DAT") {
   kinds <- sub("[0-9]+$", "", names(queue))
   pos <- 0
   pop <- function(kind) {
@@ -73,10 +81,21 @@ build_input_scripted <- function(sim, dir, name = "Colony2.DAT",
   )
   testthat::local_mocked_bindings(menu = function(...) as.integer(pop("menu")),
                                   .package = "utils")
-  withr::with_dir(dir, {
-    utils::capture.output(build.colony.input(wd = dir, name = name))
+  warns <- character()
+  out <- withr::with_dir(dir, {
+    withCallingHandlers(
+      utils::capture.output(res <- build.colony.input(wd = dir, name = name)),
+      warning = function(w) {warns <<- c(warns, conditionMessage(w)); invokeRestart("muffleWarning")})
   })
-  invisible(file.path(dir, name))
+  if (pos < length(queue)) warning("scripted wizard: ", length(queue) - pos, " answers were not used")
+  structure(if (is.null(res)) NA_character_ else file.path(dir, name),
+            output = out, warnings = warns, returned = res)
+}
+
+# The usual case: answer a whole session as described by the arguments of
+# wizard_answers().
+build_input_scripted <- function(sim, dir, name = "Colony2.DAT", ...) {
+  invisible(run_scripted(wizard_answers(sim, ...), dir, name))
 }
 
 a_scan <- function(x) stats::setNames(as.character(x), "scan1")

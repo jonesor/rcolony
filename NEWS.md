@@ -20,8 +20,18 @@ Tested end to end against COLONY 2.0.7.2 (Mac build, 15 July 2025).
   from data frames or file paths, so an analysis can be scripted and re-run.
   All settings are checked before anything is written, and the file is written
   in one go. It writes a short `<name>_ProjectInformation.txt` summary beside
-  the DAT file (`project.info = FALSE` to skip). `build.colony.input()` is
-  unchanged for now.
+  the DAT file (`project.info = FALSE` to skip).
+
+* `build.colony.input()` is now a thin layer over `write.colony.input()`. Its
+  prompts and their order are unchanged, but each answer is checked as soon as
+  it is given (and asked again if it is invalid), the equivalent
+  `write.colony.input()` call is printed so that the analysis can be repeated
+  from a script, and the file is written only after a final confirmation. It
+  no longer writes the seven copies of the data tables (`OffspringGenotype.txt`,
+  `MarkerTypeErrorRate.txt`, `AlleleFrequency.txt` and so on) that COLONY and
+  rcolony never used, and the `wd` argument now really sets where the file is
+  written. The project note is now read as a whole sentence rather than just
+  its first word.
 
 ## Bug fixes
 
