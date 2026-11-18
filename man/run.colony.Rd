@@ -17,7 +17,7 @@ run.colony(colonyexecpath = "prompt", datfilepath = "prompt", wait = TRUE)
 return value (0 if success)
 }
 \description{
-This function used \code{system2} to call Colony2 from within R.
+This function used \code{system2} to call Colony2 from within R. Colony2 is run in the directory that contains the DAT file, so its output files are written there.
 }
 \references{
 Wang, J. (2004) Sibship reconstruction from genetic data with typing errors.  Genetics 166: 1963-1979.

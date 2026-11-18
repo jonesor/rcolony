@@ -1,6 +1,6 @@
 ##' A function to run Colony2 from within the R environment.
 ##'
-##' This function used \code{system2} to call Colony2 from within R.
+##' This function used \code{system2} to call Colony2 from within R. Colony2 is run in the directory that contains the DAT file, so its output files are written there.
 ##' @param colonyexecpath The path to the Colony2 executable. If none is given, and the function defaults to \"prompt\", then you will be prompted to click on the file.
 ##' @param datfilepath The path to the DAT file that you wish to run. If none is given, and the function defaults to \"prompt\", then you will be prompted to click on the file.
 ##' @param wait Should R wait for Colony2 to be run by the system or not? TRUE/FALSE
@@ -27,7 +27,15 @@ run.colony <- function(colonyexecpath="prompt", datfilepath="prompt",
   }
   stopifnot(file.exists(datfilepath))
 
-  cmd <- paste0(colonyexecpath, " IFN:", datfilepath)
+  # COLONY writes its output files to the current working directory, so run it
+  # in the directory that holds the DAT file. That keeps the output next to the
+  # input (where get.colony.data() looks) and leaves the caller's working
+  # directory untouched.
+  colonyexecpath <- normalizePath(colonyexecpath)
+  datfilepath <- normalizePath(datfilepath)
+  owd <- setwd(dirname(datfilepath))
+  on.exit(setwd(owd), add = TRUE)
+
   if(Sys.info()["sysname"] == "Windows"){
     ret <- system2(command=colonyexecpath, args=paste0("IFN:", datfilepath),
                    wait=wait, invisible=FALSE)

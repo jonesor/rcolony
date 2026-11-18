@@ -324,6 +324,13 @@
 #' males. From the 2nd column on, the ID/name of each member of the paternal
 #' sibship is listed.
 #'
+#' \emph{Mismatch threshold (paternal).} If there are known paternal diads or
+#' sibships, you will be asked for a mismatch threshold: an integer from 0 to
+#' the number of loci. A known paternal-offspring diad is rejected by Colony if
+#' the two genotypes are Mendelian-incompatible at more loci than this. It is
+#' written on the same line as the number of known paternal diads, as required
+#' by Colony 2.0.6.3 and later.
+#'
 #' \emph{Number of known maternal sibships.} Provide the number of known
 #' maternal sibship or maternity included in the samples. The minimum value is
 #' 0. A known maternal sibship contains all of the offspring in the OFS sample
@@ -338,6 +345,13 @@
 #' a value of 0 to indicate that the mother is unknown or not in the candidate
 #' females. From the 2nd column on, the ID/name of each member of the maternal
 #' sibship is listed.
+#'
+#' \emph{Mismatch threshold (maternal).} If there are known maternal diads or
+#' sibships, you will be asked for a mismatch threshold: an integer from 0 to
+#' the number of loci. A known maternal-offspring diad is rejected by Colony if
+#' the two genotypes are Mendelian-incompatible at more loci than this. It is
+#' written on the same line as the number of known maternal diads, as required
+#' by Colony 2.0.6.3 and later.
 #'
 #' \emph{Define the number of excluded paternities.} Provide the number of
 #' offspring that each has at least one known excluded candidate male as its
@@ -410,6 +424,8 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
 
   #Functions used here
   is.whole <- function(a) {floor(a) == a}
+  #TRUE when a table of known relationships is absent (NA) or empty.
+  no.rows <- function(x) {!is.data.frame(x) || nrow(x) == 0}
 
   #######################################################
   #  ! C, Dataset name, Length<51
@@ -941,9 +957,22 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
         warning(paste("Offspring in the file you provided are not present in the offspring genotype data:", paste(offspringinfile[offspringinfile %in% colonyfile$Offspring[, 1] == FALSE], collapse=", ")), immediate. = TRUE)
       }
     }
+
+    #Mismatch threshold: the maximum number of loci at which a known paternal dyad
+    #may be Mendelian-incompatible before the dyad is rejected (COLONY >= 2.0.6.3).
+    while(length(colonyfile$paternity.threshold) == 0){
+      cat("Enter the mismatch threshold for known paternities (an integer from 0 to the number of loci).\n\n\n")
+      threshold = as.numeric(scan(n = 1, what = "integer"))
+      if(length(threshold) == 1 && !is.na(threshold) && is.whole(threshold) && threshold >= 0 && threshold <= colonyfile$n.loci){
+        colonyfile$paternity.threshold = threshold
+      }else{
+        warning("The mismatch threshold must be a whole number between 0 and the number of loci!\n", immediate. = TRUE)
+      }
+    }
   }else{
     colonyfile$paternal.dyads = NA
     colonyfile$paternal.sibships = NA
+    colonyfile$paternity.threshold = 0
   }
 
 
@@ -1024,17 +1053,30 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
         warning(paste("Offspring in the file you provided are not present in the offspring genotype data:", paste(offspringinfile[offspringinfile %in% colonyfile$Offspring[, 1] == FALSE], collapse = ", ")), immediate. = TRUE)
       }
     }
+
+    #Mismatch threshold: the maximum number of loci at which a known maternal dyad
+    #may be Mendelian-incompatible before the dyad is rejected (COLONY >= 2.0.6.3).
+    while(length(colonyfile$maternity.threshold) == 0){
+      cat("Enter the mismatch threshold for known maternities (an integer from 0 to the number of loci).\n\n\n")
+      threshold = as.numeric(scan(n = 1, what = "integer"))
+      if(length(threshold) == 1 && !is.na(threshold) && is.whole(threshold) && threshold >= 0 && threshold <= colonyfile$n.loci){
+        colonyfile$maternity.threshold = threshold
+      }else{
+        warning("The mismatch threshold must be a whole number between 0 and the number of loci!\n", immediate. = TRUE)
+      }
+    }
   }else{
     colonyfile$maternal.dyads = NA
     colonyfile$maternal.sibships = NA
+    colonyfile$maternity.threshold = 0
   }
 
   #Paternal Dyads
-  if(is.na(colonyfile$paternal.dyads)){
-    utils::write.table("0 !Number of known paternities", name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
+  if(no.rows(colonyfile$paternal.dyads)){
+    utils::write.table("0 0 !Number of known paternities, mismatch threshold", name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
     write("", name, append = TRUE)
     }else{
-      utils::write.table(paste(dim(colonyfile$paternal.dyads)[1], "!Number of known paternities"), name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
+      utils::write.table(paste(dim(colonyfile$paternal.dyads)[1], colonyfile$paternity.threshold, "!Number of known paternities, mismatch threshold"), name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
       colonyfile$paternal.dyads = colonyfile$paternal.dyads[2:1]
       colonyfile$paternal.dyads[, 1+dim(colonyfile$paternal.dyads)[2]] = c("!IDs of known offspring-father dyad", rep("", dim(colonyfile$paternal.dyads)[1] - 1))
       utils::write.table(colonyfile$paternal.dyads, name, append = TRUE, quote = FALSE, na = " ", row.names = FALSE, col.names = FALSE)
@@ -1042,11 +1084,11 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
     }
 
   #Maternal Dyads
-  if(is.na(colonyfile$maternal.dyads)){
-    utils::write.table("0 !Number of known maternities", name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
+  if(no.rows(colonyfile$maternal.dyads)){
+    utils::write.table("0 0 !Number of known maternities, mismatch threshold", name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
     write("", name, append = TRUE)
     }else{
-      utils::write.table(paste(dim(colonyfile$maternal.dyads)[1], "!Number of known maternities"), name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
+      utils::write.table(paste(dim(colonyfile$maternal.dyads)[1], colonyfile$maternity.threshold, "!Number of known maternities, mismatch threshold"), name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
       colonyfile$maternal.dyads = colonyfile$maternal.dyads[2:1]
       colonyfile$maternal.dyads[, 1 + dim(colonyfile$maternal.dyads)[2]] = c("!IDs of known offspring-mother dyad", rep("", dim(colonyfile$maternal.dyads)[1] - 1))
       utils::write.table(colonyfile$maternal.dyads, name, append = TRUE, quote = FALSE, na = " ", row.names = FALSE, col.names = FALSE)
@@ -1054,7 +1096,7 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
     }
 
   #Paternal sibships
-  if(is.na(colonyfile$paternal.sibships)){
+  if(no.rows(colonyfile$paternal.sibships)){
     utils::write.table("0 !Number of known paternal sibships with unknown fathers", name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
     write("", name, append = TRUE)
     }else{
@@ -1064,7 +1106,7 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
     }
 
   #Maternal sibships
-  if(is.na(colonyfile$maternal.sibships)){
+  if(no.rows(colonyfile$maternal.sibships)){
     utils::write.table("0  !Number of known maternal sibships with unknown mothers", name, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
     write("", name, append = TRUE)
     }else{
@@ -1428,13 +1470,13 @@ build.colony.input <- function(wd=getwd(), name = "Colony2.DAT", delim = ""){
   }
 
   #KnownPaternalDyads.txt
-  if(!is.na(colonyfile$paternal.dyads)){
+  if(!no.rows(colonyfile$paternal.dyads)){
     temp1 = colonyfile$paternal.dyads[c(2, 1)]
     names(temp1) = c("OffspringID", "Father")
     utils::write.table(temp1, "KnownPaternalDyads.txt", row.names = FALSE, quote = FALSE, col.names = TRUE)}
 
   #KnownMaternalDyads.txt
-  if(!is.na(colonyfile$maternal.dyads)){
+  if(!no.rows(colonyfile$maternal.dyads)){
     temp1 = colonyfile$maternal.dyads[c(2, 1)]
     names(temp1) = c("OffspringID", "Mother")
     utils::write.table(temp1, "KnownMaternalDyads.txt", row.names = FALSE, quote = FALSE, col.names = TRUE)}

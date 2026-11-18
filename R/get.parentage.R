@@ -90,8 +90,8 @@ Offspring$CandidateDad1<-as.character(Offspring$CandidateDad1)
 Offspring$CandidateDad1[is.na(Offspring$CandidateDad1)]<-"Unknown"
 Offspring$CandidateDad1<-as.factor(Offspring$CandidateDad1)
 
-Offspring<-merge(Offspring,colony.object$mothers,by.x="CandidateMum1",by.y="mother")
-Offspring<-merge(Offspring,colony.object$fathers,by.x="CandidateDad1",by.y="father")
+Offspring<-merge(Offspring,colony.object$mothers,by.x="CandidateMum1",by.y="motherID")
+Offspring<-merge(Offspring,colony.object$fathers,by.x="CandidateDad1",by.y="fatherID")
 
 
 			xx<-as.data.frame(table(Offspring$CandidateMum1,Offspring$CandidateDad1))

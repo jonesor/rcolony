@@ -346,6 +346,13 @@ value of 0 to indicate that the father is unknown or not in the candidate
 males. From the 2nd column on, the ID/name of each member of the paternal
 sibship is listed.
 
+\emph{Mismatch threshold (paternal).} If there are known paternal diads or
+sibships, you will be asked for a mismatch threshold: an integer from 0 to
+the number of loci. A known paternal-offspring diad is rejected by Colony if
+the two genotypes are Mendelian-incompatible at more loci than this. It is
+written on the same line as the number of known paternal diads, as required
+by Colony 2.0.6.3 and later.
+
 \emph{Number of known maternal sibships.} Provide the number of known
 maternal sibship or maternity included in the samples. The minimum value is
 0. A known maternal sibship contains all of the offspring in the OFS sample
@@ -360,6 +367,13 @@ mother ID/name if the male is known and included in the candidate females or
 a value of 0 to indicate that the mother is unknown or not in the candidate
 females. From the 2nd column on, the ID/name of each member of the maternal
 sibship is listed.
+
+\emph{Mismatch threshold (maternal).} If there are known maternal diads or
+sibships, you will be asked for a mismatch threshold: an integer from 0 to
+the number of loci. A known maternal-offspring diad is rejected by Colony if
+the two genotypes are Mendelian-incompatible at more loci than this. It is
+written on the same line as the number of known maternal diads, as required
+by Colony 2.0.6.3 and later.
 
 \emph{Define the number of excluded paternities.} Provide the number of
 offspring that each has at least one known excluded candidate male as its

@@ -86,6 +86,20 @@ mydata <- get.colony.data("/path/to/output/", colonyVersion = "2.0.7")
 2.0.6.x/2.0.7.x releases). Pass the matching version via the `colonyVersion`
 argument; `build.colony.input()` writes the current-format input file.
 
+## Testing
+
+```r
+devtools::test()   # or testthat::test_local()
+```
+
+Tests of the input wizard and the output parsers need no COLONY binary. To
+also run the end-to-end test against a real COLONY (about 40 s), set the path
+to the executable first:
+
+```r
+Sys.setenv(RCOLONY_EXEC = "~/Software/colony_2.0.7.2/colony2s.out")
+```
+
 ## Citation
 
 Jones, O.R. & Wang, J. (2010) COLONY: a program for parentage and sibship

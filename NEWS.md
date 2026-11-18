@@ -1,3 +1,47 @@
+# rcolony 1.4.0.9000
+
+## COLONY 2.0.7.2 compatibility
+
+Tested end to end against COLONY 2.0.7.2 (Mac build, 15 July 2025).
+
+* `get.colony.data()` accepts `colonyVersion = "2.0.7.1"` and `"2.0.7.2"`
+  (same input-file layout as 2.0.7), and now reads COLONY 2.0.7.x output
+  correctly: comma-delimited `*.Maternity`/`*.Paternity` files, and pairwise
+  parentage files whose headers contain `#` (the new `#OffGtype`, `#PrntGtype`,
+  `#PairGtype`, `#ExcLoci` columns are returned as `X.OffGtype` etc.).
+
+* `build.colony.input()` now asks for, and writes, the mismatch threshold that
+  COLONY (>= 2.0.6.3) requires on the known-paternity and known-maternity
+  lines. Previously COLONY rejected any input file that had known dyads.
+
+## Bug fixes
+
+* `build.colony.input()` no longer fails with "the condition has length > 1"
+  when there are known paternities, maternities or sibships.
+
+* `get.colony.data()`: the default `filename` now matches only files ending in
+  `.DAT`, rather than any file whose name contains "dat" (such as
+  `*.data` and `*.GtypeData`).
+
+* `get.colony.data()` no longer appends a spurious `"Unknown"` row to the
+  offspring table, which inflated the Unknown/Unknown count in
+  `get.parentage()` by one. `get.parentage()` and `plotsibs()` ignore the row
+  in objects created by earlier versions, including `testdata`.
+
+* `get.parentage(pairwise = TRUE)` no longer fails (it merged on column names
+  that do not exist).
+
+* `run.colony()` runs COLONY in the directory containing the DAT file, so the
+  output files are written there rather than in the caller's working
+  directory.
+
+## Testing
+
+* Added a testthat suite. Tests of the input wizard and of the parsers need no
+  COLONY binary; an end-to-end test (simulated pedigree with candidate parents,
+  known and excluded relationships, genotyping error) runs when the environment
+  variable `RCOLONY_EXEC` points at a COLONY executable.
+
 # rcolony 1.4.0
 
 ## New features
