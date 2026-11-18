@@ -1,4 +1,4 @@
-# rcolony 1.4.0.9000
+# rcolony 1.5.0
 
 ## COLONY 2.0.7.2 compatibility
 
